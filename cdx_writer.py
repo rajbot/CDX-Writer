@@ -10,6 +10,8 @@ from warctools import ArchiveRecord
 
 import re
 import sys
+import base64
+import hashlib
 from urlparse  import urlparse
 from datetime  import datetime
 from optparse  import OptionParser
@@ -23,7 +25,9 @@ class CDX_Writer(object):
                           'a': 'original url',
                           'b': 'date',
                           'g': 'file name',
+                          'k': 'new style checksum',
                           'm': 'mime type',
+                          'r': 'redirect',
                           's': 'response code',
                          }
 
@@ -62,10 +66,29 @@ class CDX_Writer(object):
     def get_file_name(self, record):
         return self.file
 
+    # get_new_style_checksum() //field "k"
+    #___________________________________________________________________________
+    def get_new_style_checksum(self, record):
+        """Return a base32-encoded sha1"""
+        h = hashlib.sha1(record.content[1])
+        return base64.b32encode(h.digest())
+
     # get_mime_type() //field "m"
     #___________________________________________________________________________
     def get_mime_type(self, record):
         return record.content_type
+
+    # get_redirect() //field "r"
+    #___________________________________________________________________________
+    def get_redirect(self, record):
+        response_code = self.get_response_code(record)
+
+        if (3 == len(response_code)) and response_code.startswith('3'):
+            m = re.search("Location: (\S+)", record.content[1])
+            if m:
+                return m.group(1)
+
+        return '-'
 
     # get_response_code() //field "s"
     #___________________________________________________________________________
@@ -115,7 +138,7 @@ if __name__ == '__main__':
     parser.add_option("-f", "--format", dest="format")
 
     parser.set_defaults(format="N b a m s k r M S V g")
-    parser.set_defaults(format="N b a m s g")
+    parser.set_defaults(format="N b a m s k r g")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
