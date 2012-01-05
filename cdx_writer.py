@@ -6,10 +6,12 @@ http://code.hanzoarchives.com/warc-tools/src/tip/hanzo/warctools
 This script is loosely based on warcindex.py:
 http://code.hanzoarchives.com/warc-tools/src/1897e2bc9d29/warcindex.py
 """
+from warctools import ArchiveRecord
+
+import re
 import sys
 from urlparse  import urlparse
 from datetime  import datetime
-from warctools import ArchiveRecord
 from optparse  import OptionParser
 
 class CDX_Writer(object):
@@ -22,6 +24,7 @@ class CDX_Writer(object):
                           'b': 'date',
                           'g': 'file name',
                           'm': 'mime type',
+                          's': 'response code',
                          }
 
         self.file   = file
@@ -64,6 +67,15 @@ class CDX_Writer(object):
     def get_mime_type(self, record):
         return record.content_type
 
+    # get_response_code() //field "s"
+    #___________________________________________________________________________
+    def get_response_code(self, record):
+        m = re.match("HTTP/\d\.\d (\d+)", record.content[1])
+        if m:
+            return m.group(1)
+        else:
+            return '-'
+
     # make_cdx()
     #___________________________________________________________________________
     def make_cdx(self):
@@ -72,7 +84,7 @@ class CDX_Writer(object):
         fh = ArchiveRecord.open_archive(self.file, gzip="auto")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
             if record:
-                if 'warcinfo' == record.type:
+                if 'response' != record.type:
                     continue
 
                 str = ''
@@ -103,7 +115,7 @@ if __name__ == '__main__':
     parser.add_option("-f", "--format", dest="format")
 
     parser.set_defaults(format="N b a m s k r M S V g")
-    parser.set_defaults(format="N b a m g")
+    parser.set_defaults(format="N b a m s g")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 

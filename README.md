@@ -2,7 +2,9 @@ Python script to create CDX index files of WARC data.
 
 `--format` flag specifies the list of fields to include.
 
-The syntax is as follows (from http://www.archive.org/web/researcher/cdx_legend.php):
+The format syntax can is specified here, and is copied below:
+* http://www.archive.org/web/researcher/cdx_legend.php
+* https://archive-access.svn.sourceforge.net/svnroot/archive-access/trunk/archive-access/projects/wayback/wayback-core/src/main/java/org/archive/wayback/resourceindex/cdx/format/CDXFormat.java
 
     The default first line of a CDX file is :
     CDX A b e a m s c k r V v D d g M n
