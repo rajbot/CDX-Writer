@@ -21,7 +21,10 @@ class CDX_Writer(object):
     #___________________________________________________________________________
     def __init__(self, file, format):
 
-        self.field_map = {'N': 'massaged url',
+        self.field_map = {'M': 'AIF meta tags',
+                          'N': 'massaged url',
+                          'S': 'compressed record size',
+                          'V': 'compressed arc file offset',
                           'a': 'original url',
                           'b': 'date',
                           'g': 'file name',
@@ -33,10 +36,19 @@ class CDX_Writer(object):
 
         self.file   = file
         self.format = format
+        self.offset = 0
+
+    # get_AIF_meta_tags() //field "M"
+    #___________________________________________________________________________
+    def get_AIF_meta_tags(self, record):
+        return '-'
 
     # get_massaged_url() //field "N"
     #___________________________________________________________________________
     def get_massaged_url(self, record):
+        if 'warcinfo' == record.type:
+            return self.get_original_url(record)
+
         o = urlparse(record.url)
         if 'dns' == o.scheme:
             netloc = o.path
@@ -46,13 +58,31 @@ class CDX_Writer(object):
             path   = o.path
 
         parts = netloc.split('.')
+
+        if 'www' == parts[0]:
+            parts = parts[1:]
+
         parts.reverse()
         return ','.join(parts) + ')'+path
 
+    # get_compressed_record_size() //field "S"
+    #___________________________________________________________________________
+    def get_compressed_record_size(self, record):
+        return str(record.compressed_record_size)
+
+    # get_compressed_arc_file_offset() //field "V"
+    #___________________________________________________________________________
+    def get_compressed_arc_file_offset(self, record):
+        return str(self.offset)
 
     # get_original_url() //field "a"
     #___________________________________________________________________________
     def get_original_url(self, record):
+        if 'warcinfo' == record.type:
+            fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20111218010050"
+            url = 'warcinfo:/%s/%s' % (self.file, fake_build_version)
+            return url
+
         return record.url
 
     # get_date() //field "b"
@@ -106,21 +136,19 @@ class CDX_Writer(object):
 
         fh = ArchiveRecord.open_archive(self.file, gzip="auto")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
+            self.offset = offset
+
             if record:
-                if 'response' != record.type:
-                    continue
-
-                str = ''
+                s = ''
                 for field in self.format.split():
-
                     if not field in self.field_map:
                         sys.exit('Unknown field: ' + field)
 
                     endpoint = self.field_map[field].replace(' ', '_')
                     response = getattr(self, 'get_' + endpoint)(record)
-                    str += response + ' '
+                    s += response + ' '
 
-                print str.rstrip()
+                print s.rstrip()
                 #record.dump()
             elif errors:
                 pass # ignore
@@ -138,7 +166,6 @@ if __name__ == '__main__':
     parser.add_option("-f", "--format", dest="format")
 
     parser.set_defaults(format="N b a m s k r M S V g")
-    parser.set_defaults(format="N b a m s k r g")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
