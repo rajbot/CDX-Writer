@@ -55,11 +55,11 @@ class CDX_Writer(object):
             path   = ''
         else:
             netloc = o.netloc
-            path   = o.path
+            path   = o.path.lower()
 
         parts = netloc.split('.')
 
-        if 'www' == parts[0]:
+        if 'http' == o.scheme and 'www' == parts[0]:
             parts = parts[1:]
 
         parts.reverse()
@@ -99,14 +99,28 @@ class CDX_Writer(object):
     # get_new_style_checksum() //field "k"
     #___________________________________________________________________________
     def get_new_style_checksum(self, record):
-        """Return a base32-encoded sha1"""
-        h = hashlib.sha1(record.content[1])
-        return base64.b32encode(h.digest())
+        """Return a base32-encoded sha1
+        For revisit records, return the original sha1
+        """
+
+        if 'revisit' == record.type:
+            digest = record.get_header('WARC-Payload-Digest')
+            if digest.startswith('sha1:'):
+                digest = digest[5:]
+            return digest
+        else:
+            h = hashlib.sha1(record.content[1])
+            return base64.b32encode(h.digest())
 
     # get_mime_type() //field "m"
     #___________________________________________________________________________
     def get_mime_type(self, record):
-        return record.content_type
+        if 'response' == record.type:
+            return record.content_type
+        elif 'warcinfo' == record.type:
+            return 'warc-info' #why special case this?
+        else:
+            return 'warc/'+record.type
 
     # get_redirect() //field "r"
     #___________________________________________________________________________
@@ -123,6 +137,9 @@ class CDX_Writer(object):
     # get_response_code() //field "s"
     #___________________________________________________________________________
     def get_response_code(self, record):
+        if 'response' != record.type:
+            return '-'
+
         m = re.match("HTTP/\d\.\d (\d+)", record.content[1])
         if m:
             return m.group(1)
