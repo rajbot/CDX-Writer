@@ -12,7 +12,8 @@ import re
 import sys
 import base64
 import hashlib
-from urlparse  import urlparse
+import urllib
+import urlparse
 from datetime  import datetime
 from optparse  import OptionParser
 
@@ -49,13 +50,31 @@ class CDX_Writer(object):
         if 'warcinfo' == record.type:
             return self.get_original_url(record)
 
-        o = urlparse(record.url)
+        o = urlparse.urlparse(record.url)
         if 'dns' == o.scheme:
             netloc = o.path
             path   = ''
         else:
             netloc = o.netloc
             path   = o.path.lower()
+            if len(path) > 1:
+                path = path.rstrip('/')
+
+            if o.query:
+                """
+                I think the archive's cdx writer is doing the wrong thing here,
+                but we will try to maintain compatibility. We really should
+                parse the query string BEFORE unquoting. Otherwise, we turn
+                encoded arguments into query args when they really are not.
+                example url: 'https://twitter.com/intent/session?original_referer=http%3A%2F%2Fplatform.twitter.com%2Fwidgets%2Ftweet_button.html%3Furl%3Dhttp%3A%2F%2Fbit.ly%2FqRht1a%26text%3DAmuse-bouche%3A%2520Bike%2520sharing%2520saves%2520lives%26count%3Dnone&return_to=%2Fintent%2Ftweet'
+                "count" shouldn't be a query arg, but since we unquote before
+                we parse the string, it becomes one.
+                """
+
+                query_list = urlparse.parse_qsl(urlparse.unquote(o.query), keep_blank_values=True)
+                joined_tuples = ['='.join(pair) for pair in query_list if pair[1]] + [pair[0] for pair in query_list if not pair[1]]
+                joined_tuples.sort()
+                path += '?' + '&'.join(joined_tuples).replace(' ', '%20').lower()
 
         parts = netloc.split('.')
 
