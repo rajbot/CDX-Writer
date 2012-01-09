@@ -39,6 +39,30 @@ class CDX_Writer(object):
         self.format = format
         self.offset = 0
 
+    # stupid_unquote()
+    #___________________________________________________________________________
+    def stupid_unquote(self, s):
+        """
+        Only unquote /, :, \, ?, &, =, even if they are double encoded
+
+        You must first lowercase the string before passing it to this stupid function.
+        """
+        #return urllib.unquote(s).replace(' ', '%20')
+        map = [('%25', '%'), #do this first to deal with double unquoting..
+               ('%26', '&'),
+               ('%2f', '/'),
+               ('%3a', ':'),
+               ('%3d', '='),
+               ('%3f', '?'),
+               ('%5c', '\\'),
+              ]
+        for k, v in map:
+            s = s.replace(k, v)
+
+        return s
+
+        s2 = s.replace('%25', '%').replace('%2f', '/').replace('%3a', ':').replace('%3f', '?')
+
     # get_AIF_meta_tags() //field "M"
     #___________________________________________________________________________
     def get_AIF_meta_tags(self, record):
@@ -62,7 +86,11 @@ class CDX_Writer(object):
 
             if o.query:
                 """
-                I think the archive's cdx writer is doing the wrong thing here,
+                python's urlparse.parse_qsl is TOO GOOD.
+                We'll homebrew a query string parser to match the strange output
+                of the archive's cdx writer.
+
+                Also, I think the archive's cdx writer is doing the wrong thing,
                 but we will try to maintain compatibility. We really should
                 parse the query string BEFORE unquoting. Otherwise, we turn
                 encoded arguments into query args when they really are not.
@@ -71,10 +99,15 @@ class CDX_Writer(object):
                 we parse the string, it becomes one.
                 """
 
-                query_list = urlparse.parse_qsl(urlparse.unquote(o.query), keep_blank_values=True)
-                joined_tuples = ['='.join(pair) for pair in query_list if pair[1]] + [pair[0] for pair in query_list if not pair[1]]
-                joined_tuples.sort()
-                path += '?' + '&'.join(joined_tuples).replace(' ', '%20').lower()
+                #query_list = urlparse.parse_qsl(urlparse.unquote(o.query), keep_blank_values=True)
+                #joined_tuples = ['='.join(pair) for pair in query_list if pair[1]] + [pair[0] for pair in query_list if not pair[1]]
+                #joined_tuples.sort()
+                #path += '?' + '&'.join(joined_tuples).replace(' ', '%20').lower()
+
+                query_list = self.stupid_unquote(o.query.lower()).split('&')
+                query_list.sort()
+                #double_unquote = [self.stupid_unquote(x) for x in query_list]
+                path += '?' + '&'.join(query_list)
 
         parts = netloc.split('.')
 
@@ -205,7 +238,9 @@ if __name__ == '__main__':
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
-    assert 1 == len(input_files)
+    if not 1 == len(input_files):
+        parser.print_help()
+        exit(-1)
 
     cdx_writer = CDX_Writer(input_files[0], options.format)
     cdx_writer.make_cdx()
