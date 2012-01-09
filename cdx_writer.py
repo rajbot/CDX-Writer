@@ -16,6 +16,7 @@ import urllib
 import urlparse
 from datetime  import datetime
 from optparse  import OptionParser
+from surt      import surt
 
 class CDX_Writer(object):
 
@@ -39,83 +40,21 @@ class CDX_Writer(object):
         self.format = format
         self.offset = 0
 
-    # stupid_unquote()
-    #___________________________________________________________________________
-    def stupid_unquote(self, s):
-        """
-        Only unquote /, :, \, ?, &, =, even if they are double encoded
-
-        You must first lowercase the string before passing it to this stupid function.
-        """
-        #return urllib.unquote(s).replace(' ', '%20')
-        map = [('%25', '%'), #do this first to deal with double unquoting..
-               ('%26', '&'),
-               ('%2f', '/'),
-               ('%3a', ':'),
-               ('%3d', '='),
-               ('%3f', '?'),
-               ('%5c', '\\'),
-              ]
-        for k, v in map:
-            s = s.replace(k, v)
-
-        return s
-
-        s2 = s.replace('%25', '%').replace('%2f', '/').replace('%3a', ':').replace('%3f', '?')
 
     # get_AIF_meta_tags() //field "M"
     #___________________________________________________________________________
     def get_AIF_meta_tags(self, record):
         return '-'
 
+
     # get_massaged_url() //field "N"
     #___________________________________________________________________________
     def get_massaged_url(self, record):
         if 'warcinfo' == record.type:
             return self.get_original_url(record)
-
-        o = urlparse.urlparse(record.url)
-        if 'dns' == o.scheme:
-            netloc = o.path
-            path   = ''
         else:
-            netloc = o.netloc
-            path   = o.path.lower()
-            if len(path) > 1:
-                path = path.rstrip('/')
+            return surt(record.url)
 
-            if o.query:
-                """
-                python's urlparse.parse_qsl is TOO GOOD.
-                We'll homebrew a query string parser to match the strange output
-                of the archive's cdx writer.
-
-                Also, I think the archive's cdx writer is doing the wrong thing,
-                but we will try to maintain compatibility. We really should
-                parse the query string BEFORE unquoting. Otherwise, we turn
-                encoded arguments into query args when they really are not.
-                example url: 'https://twitter.com/intent/session?original_referer=http%3A%2F%2Fplatform.twitter.com%2Fwidgets%2Ftweet_button.html%3Furl%3Dhttp%3A%2F%2Fbit.ly%2FqRht1a%26text%3DAmuse-bouche%3A%2520Bike%2520sharing%2520saves%2520lives%26count%3Dnone&return_to=%2Fintent%2Ftweet'
-                "count" shouldn't be a query arg, but since we unquote before
-                we parse the string, it becomes one.
-                """
-
-                #query_list = urlparse.parse_qsl(urlparse.unquote(o.query), keep_blank_values=True)
-                #joined_tuples = ['='.join(pair) for pair in query_list if pair[1]] + [pair[0] for pair in query_list if not pair[1]]
-                #joined_tuples.sort()
-                #path += '?' + '&'.join(joined_tuples).replace(' ', '%20').lower()
-
-                query_list = self.stupid_unquote(o.query.lower()).split('&')
-                query_list.sort()
-                #double_unquote = [self.stupid_unquote(x) for x in query_list]
-                path += '?' + '&'.join(query_list)
-
-        parts = netloc.split('.')
-
-        if 'http' == o.scheme and 'www' == parts[0]:
-            parts = parts[1:]
-
-        parts.reverse()
-        return ','.join(parts) + ')'+path
 
     # get_compressed_record_size() //field "S"
     #___________________________________________________________________________
