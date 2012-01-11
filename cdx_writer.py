@@ -111,9 +111,11 @@ class CDX_Writer(object):
     # get_mime_type() //field "m"
     #___________________________________________________________________________
     def get_mime_type(self, record):
-        # 'application/http; msgtype=response' is a strange special-case...
+        """ See the WARC spec for more info on 'application/http; msgtype=response'
+        http://archive-access.sourceforge.net/warc/warc_file_format-0.16.html#anchor7
+        """
         if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
-            return self.get_parsed_content_type(record)
+            return self.get_http_content_type(record)
         elif 'response' == record.type:
             return record.content_type
         elif 'warcinfo' == record.type:
@@ -123,13 +125,7 @@ class CDX_Writer(object):
 
     # get_parsed_content_type()
     #___________________________________________________________________________
-    def get_parsed_content_type(self, record):
-        """Sometimes the WARC 'Content-Type' header contains
-        'application/http; msgtype=response', which does not match the
-        Content-Type header of the http response. We want to write the header
-        contained in the actual response into the CDX.
-        """
-
+    def get_http_content_type(self, record):
         content_type = record.type
         for line in record.content[1].splitlines():
             if line.startswith('Content-Type: '):
