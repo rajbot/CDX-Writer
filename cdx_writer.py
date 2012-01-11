@@ -130,14 +130,17 @@ class CDX_Writer(object):
         contained in the actual response into the CDX.
         """
 
+        content_type = record.type
         for line in record.content[1].splitlines():
             if line.startswith('Content-Type: '):
-                line = line.replace('Content-Type: ', '')
-                m = re.match('(.+);', line)
-                if m:
-                    return m.group(1)
-                else:
-                    return line
+                content_type = line.replace('Content-Type: ', '')
+                break
+
+        m = re.match('(.+);', content_type)
+        if m:
+            return m.group(1)
+        else:
+            return content_type
 
 
 
