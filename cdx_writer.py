@@ -126,7 +126,7 @@ class CDX_Writer(object):
     # get_parsed_content_type()
     #___________________________________________________________________________
     def get_http_content_type(self, record):
-        content_type = record.type
+        content_type = 'unk'
         for line in record.content[1].splitlines():
             if line.startswith('Content-Type: '):
                 content_type = line.replace('Content-Type: ', '')
@@ -146,7 +146,7 @@ class CDX_Writer(object):
         response_code = self.get_response_code(record)
 
         if (3 == len(response_code)) and response_code.startswith('3'):
-            m = re.search("Location: (\S+)", record.content[1])
+            m = re.search("Location: (\S+)", record.content[1], re.I)
             if m:
                 return m.group(1)
 
