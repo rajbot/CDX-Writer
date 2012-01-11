@@ -96,9 +96,14 @@ class CDX_Writer(object):
 
         if 'revisit' == record.type:
             digest = record.get_header('WARC-Payload-Digest')
-            if digest.startswith('sha1:'):
-                digest = digest[5:]
-            return digest
+            return digest.replace('sha1:', '')
+        elif 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
+            # Where does this WARC-Payload-Digest header come from?
+            # It does not match the sha1(record.content[1]), which might
+            # have something to do with the different content-type headers
+            # in the warc header and the actual http response
+            digest = record.get_header('WARC-Payload-Digest')
+            return digest.replace('sha1:', '')
         else:
             h = hashlib.sha1(record.content[1])
             return base64.b32encode(h.digest())
@@ -106,12 +111,35 @@ class CDX_Writer(object):
     # get_mime_type() //field "m"
     #___________________________________________________________________________
     def get_mime_type(self, record):
-        if 'response' == record.type:
+        # 'application/http; msgtype=response' is a strange special-case...
+        if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
+            return self.get_parsed_content_type(record)
+        elif 'response' == record.type:
             return record.content_type
         elif 'warcinfo' == record.type:
             return 'warc-info' #why special case this?
         else:
             return 'warc/'+record.type
+
+    # get_parsed_content_type()
+    #___________________________________________________________________________
+    def get_parsed_content_type(self, record):
+        """Sometimes the WARC 'Content-Type' header contains
+        'application/http; msgtype=response', which does not match the
+        Content-Type header of the http response. We want to write the header
+        contained in the actual response into the CDX.
+        """
+
+        for line in record.content[1].splitlines():
+            if line.startswith('Content-Type: '):
+                line = line.replace('Content-Type: ', '')
+                m = re.match('(.+);', line)
+                if m:
+                    return m.group(1)
+                else:
+                    return line
+
+
 
     # get_redirect() //field "r"
     #___________________________________________________________________________
