@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
-""" This script requires Hanzo Archives' warc-tools:
+""" This script requires a modified version of Hanzo Archives' warc-tools:
 http://code.hanzoarchives.com/warc-tools/src/tip/hanzo/warctools
 
 This script is loosely based on warcindex.py:
 http://code.hanzoarchives.com/warc-tools/src/1897e2bc9d29/warcindex.py
+
+The functions that start with "get_" (as opposed to "parse_") are called be the
+dispatch loop in make_cdx using getattr().
 """
 from warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt          #from https://github.com/rajbot/surt
@@ -41,98 +44,125 @@ class CDX_Writer(object):
 
         self.file   = file
         self.format = format
-        self.offset = 0
         self.crlf_pattern = re.compile('\r?\n\r?\n')
 
-    # parse_robots_meta_tags
+        #these fields are set for each record in the warc
+        self.offset        = 0
+        self.mime_type     = None
+        self.headers       = None
+        self.content       = None
+        self.meta_tags     = None
+        self.response_code = None
+
+    # parse_http_header()
     #___________________________________________________________________________
-    def parse_robots_meta_tags(self, response_str):
-        robot_tags = []
-        #print response_str.__repr__()
-        ###TODO: this regex seems slow, speed this up.
-        headers, html_str = self.crlf_pattern.split(response_str, 1)
-        html_str = html_str.strip()
+    def parse_http_header(self, header_name):
+        pattern = re.compile(header_name+':\s*(.+)', re.I)
+        for line in iter(self.headers):
+            m = pattern.match(line)
+            if m:
+                return m.group(1)
+        return None
 
+    # parse_http_content_type_header()
+    #___________________________________________________________________________
+    def parse_http_content_type_header(self, record):
+        content_type = self.parse_http_header('content-type')
+        if content_type is None:
+            return 'unk'
 
-        #print 'headers:'
-        #print headers
-        #print 'html_str:'
-        #print html_str
-        #print 'x'
+        m = re.match('(.+);', content_type)
+        if m:
+            return m.group(1)
+        else:
+            return content_type
 
+    # parse_meta_tags
+    #___________________________________________________________________________
+    def parse_meta_tags(self, record):
+
+        if not ('response' == record.type and 'text/html' == self.mime_type):
+            return None
+
+        meta_tags = {}
+
+        #lxml.html can't parse blank documents
+        html_str = self.content.strip()
         if '' == html_str:
-            return robot_tags
+            return meta_tags
 
         ###TODO: is there a faster way than actually parsing the html?
-        ###maybe use a regex, or maybe just parse the <head.
+        ###maybe use a regex, or maybe just parse the <head>.
         html = lxml.html.document_fromstring(html_str)
 
         try:
             head = html.head
         except IndexError:
             #this might have been an xml response
-            return robot_tags
+            return meta_tags
 
         for meta in head:
             name = meta.get('name')
-            if name is not None and 'robots' == name.lower():
+            if name is not None:
+                name = name.lower()
                 content = meta.get('content')
-                if content is not None:
-                    tags = content.split(',')
-                    tags = [x.strip().lower() for x in tags]
-                    robot_tags += tags
+                if name not in meta_tags:
+                    meta_tags[name] = content
+                else:
+                    meta_tags[name] += ',' + content
 
-        return robot_tags
+        return meta_tags
+
 
     # get_AIF_meta_tags() //field "M"
     #___________________________________________________________________________
-    def get_AIF_meta_tags(self, record, mime_type):
+    def get_AIF_meta_tags(self, record):
         """robot metatags, if present, should be in this order: A, F, I
         """
-        if 'response' == record.type and 'text/html' == mime_type:
-            robot_tags = self.parse_robots_meta_tags(record.content[1])
-            if not robot_tags:
-                return '-' #common case
+        if not self.meta_tags:
+            return '-'
+        if 'robots' not in self.meta_tags:
+            return '-'
 
-            s = ''
+        robot_tags = self.meta_tags['robots'].split(',')
+        robot_tags = [x.strip().lower() for x in robot_tags]
 
-            if 'noarchive' in robot_tags:
-                s += 'A'
-            if 'nofollow' in robot_tags:
-                s += 'F'
-            if 'noindex' in robot_tags:
-                s += 'I'
+        s = ''
+        if 'noarchive' in robot_tags:
+            s += 'A'
+        if 'nofollow' in robot_tags:
+            s += 'F'
+        if 'noindex' in robot_tags:
+            s += 'I'
 
-            if s:
-                return ''.join(s)
-            else:
-                return '-'
+        if s:
+            return ''.join(s)
         else:
             return '-'
 
 
     # get_massaged_url() //field "N"
     #___________________________________________________________________________
-    def get_massaged_url(self, record, mime_type):
+    def get_massaged_url(self, record):
         if 'warcinfo' == record.type:
-            return self.get_original_url(record, mime_type)
+            return self.get_original_url(record)
         else:
             return surt(record.url)
 
 
     # get_compressed_record_size() //field "S"
     #___________________________________________________________________________
-    def get_compressed_record_size(self, record, mime_type):
+    def get_compressed_record_size(self, record):
         return str(record.compressed_record_size)
 
     # get_compressed_arc_file_offset() //field "V"
     #___________________________________________________________________________
-    def get_compressed_arc_file_offset(self, record, mime_type):
+    def get_compressed_arc_file_offset(self, record):
         return str(self.offset)
 
     # get_original_url() //field "a"
     #___________________________________________________________________________
-    def get_original_url(self, record, mime_type):
+    def get_original_url(self, record):
         if 'warcinfo' == record.type:
             fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20111218010050"
             url = 'warcinfo:/%s/%s' % (self.file, fake_build_version)
@@ -142,18 +172,18 @@ class CDX_Writer(object):
 
     # get_date() //field "b"
     #___________________________________________________________________________
-    def get_date(self, record, mime_type):
+    def get_date(self, record):
         date = datetime.strptime(record.date, "%Y-%m-%dT%H:%M:%SZ")
         return date.strftime("%Y%m%d%H%M%S")
 
     # get_file_name() //field "g"
     #___________________________________________________________________________
-    def get_file_name(self, record, mime_type):
+    def get_file_name(self, record):
         return self.file
 
     # get_new_style_checksum() //field "k"
     #___________________________________________________________________________
-    def get_new_style_checksum(self, record, mime_type):
+    def get_new_style_checksum(self, record):
         """Return a base32-encoded sha1
         For revisit records, return the original sha1
         """
@@ -174,13 +204,13 @@ class CDX_Writer(object):
 
     # get_mime_type() //field "m"
     #___________________________________________________________________________
-    def get_mime_type(self, record, mime_type=None, use_precalulated_mime_type=True):
+    def get_mime_type(self, record, use_precalculated_value=True):
         """ See the WARC spec for more info on 'application/http; msgtype=response'
         http://archive-access.sourceforge.net/warc/warc_file_format-0.16.html#anchor7
         """
 
-        if use_precalulated_mime_type:
-            return mime_type
+        if use_precalculated_value:
+            return self.mime_type
 
         if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
             return self.parse_http_content_type_header(record)
@@ -191,37 +221,14 @@ class CDX_Writer(object):
         else:
             return 'warc/'+record.type
 
-    # parse_http_header()
-    #___________________________________________________________________________
-    def parse_http_header(self, response, header_name):
-        pattern = re.compile(header_name+':\s*(.+)', re.I)
-        for line in iter(response.splitlines()):
-            m = pattern.match(line)
-            if m:
-                return m.group(1)
-        return None
-
-    # parse_http_content_type_header()
-    #___________________________________________________________________________
-    def parse_http_content_type_header(self, record):
-        content_type = self.parse_http_header(record.content[1], 'content-type')
-        if content_type is None:
-            return 'unk'
-
-        m = re.match('(.+);', content_type)
-        if m:
-            return m.group(1)
-        else:
-            return content_type
-
 
     # get_redirect() //field "r"
     #___________________________________________________________________________
-    def get_redirect(self, record, mime_type):
-        response_code = self.get_response_code(record, mime_type)
+    def get_redirect(self, record):
+        response_code = self.response_code
 
         if (3 == len(response_code)) and response_code.startswith('3'):
-            location = self.parse_http_header(record.content[1], 'location')
+            location = self.parse_http_header('location')
             if location:
                 # urlparse.urljoin removes blank fragments (trailing #),
                 # even if allow_fragments is set to True, so do this manually
@@ -237,7 +244,10 @@ class CDX_Writer(object):
 
     # get_response_code() //field "s"
     #___________________________________________________________________________
-    def get_response_code(self, record, mime_type):
+    def get_response_code(self, record, use_precalculated_value=True):
+        if use_precalculated_value:
+            return self.response_code
+
         if 'response' != record.type:
             return '-'
 
@@ -246,6 +256,23 @@ class CDX_Writer(object):
             return m.group(1)
         else:
             return '-'
+
+    # split_headers_and_content()
+    #___________________________________________________________________________
+    def parse_headers_and_content(self, record):
+        """Returns a list of header lines, split with splitlines(), and the content.
+        We call splitlines() here so we only split once, and so \r\n and \n are
+        split in the same way.
+        """
+
+        if 'response' == record.type and record.content[1].startswith('HTTP'):
+            headers, content = self.crlf_pattern.split(record.content[1], 1)
+            headers = headers.splitlines()
+        else:
+            headers = None
+            content = None
+
+        return headers, content
 
     # make_cdx()
     #___________________________________________________________________________
@@ -257,8 +284,11 @@ class CDX_Writer(object):
             self.offset = offset
 
             if record:
-                #precalculate mime type
-                mime_type = self.get_mime_type(record, use_precalulated_mime_type=False)
+                ### precalculated data that is used multiple times
+                self.headers, self.content = self.parse_headers_and_content(record)
+                self.mime_type             = self.get_mime_type(record, use_precalculated_value=False)
+                self.response_code         = self.get_response_code(record, use_precalculated_value=False)
+                self.meta_tags             = self.parse_meta_tags(record)
 
                 s = ''
                 for field in self.format.split():
@@ -266,7 +296,7 @@ class CDX_Writer(object):
                         sys.exit('Unknown field: ' + field)
 
                     endpoint = self.field_map[field].replace(' ', '_')
-                    response = getattr(self, 'get_' + endpoint)(record, mime_type)
+                    response = getattr(self, 'get_' + endpoint)(record)
                     s += response + ' '
 
                 print s.rstrip()
@@ -274,7 +304,7 @@ class CDX_Writer(object):
             elif errors:
                 pass # ignore
             else:
-                pass            # no errors at tail
+                pass # tail
 
         fh.close()
 
