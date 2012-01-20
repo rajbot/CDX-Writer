@@ -46,6 +46,9 @@ class CDX_Writer(object):
         self.format = format
         self.crlf_pattern = re.compile('\r?\n\r?\n')
 
+        #this is what wayback uses:
+        self.fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20120112102659"
+
         #these fields are set for each record in the warc
         self.offset        = 0
         self.mime_type     = None
@@ -176,8 +179,7 @@ class CDX_Writer(object):
     #___________________________________________________________________________
     def get_original_url(self, record):
         if 'warcinfo' == record.type:
-            fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20111218010050"
-            url = 'warcinfo:/%s/%s' % (self.file, fake_build_version)
+            url = 'warcinfo:/%s/%s' % (self.file, self.fake_build_version)
             return url
 
         return record.url
@@ -310,7 +312,7 @@ class CDX_Writer(object):
                 self.headers, self.content = self.parse_headers_and_content(record)
                 self.mime_type             = self.get_mime_type(record, use_precalculated_value=False)
                 self.response_code         = self.get_response_code(record, use_precalculated_value=False)
-                self.meta_tags             = self.parse_meta_tags(record)
+                #self.meta_tags             = self.parse_meta_tags(record)
 
                 s = ''
                 for field in self.format.split():
