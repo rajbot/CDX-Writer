@@ -80,6 +80,14 @@ class CDX_Writer(object):
     # parse_meta_tags
     #___________________________________________________________________________
     def parse_meta_tags(self, record):
+        """We want to parse meta tags in <head>, even if not direct children.
+        e.g. <head><noscript><meta .../></noscript></head>
+
+        What should we do about multiple meta tags with the same name?
+        currently, we append the content attribs together with a comma seperator.
+
+        We use either the 'name' or 'http-equiv' attrib as the meta_tag dict key.
+        """
 
         if not ('response' == record.type and 'text/html' == self.mime_type):
             return None
@@ -101,8 +109,12 @@ class CDX_Writer(object):
             #this might have been an xml response
             return meta_tags
 
-        for meta in head:
+        metas = head.xpath("//meta")
+        for meta in metas:
             name = meta.get('name')
+            if name is None:
+                name = meta.get('http-equiv')
+
             if name is not None:
                 name = name.lower()
                 content = meta.get('content')
@@ -227,7 +239,11 @@ class CDX_Writer(object):
     def get_redirect(self, record):
         response_code = self.response_code
 
-        if (3 == len(response_code)) and response_code.startswith('3'):
+        #only deal with 2xx and 3xx responses:
+        if 3 != len(response_code):
+            return '-'
+
+        if response_code.startswith('3'):
             location = self.parse_http_header('location')
             if location:
                 # urlparse.urljoin removes blank fragments (trailing #),
@@ -238,6 +254,12 @@ class CDX_Writer(object):
                 else:
                     s = urlsplit(record.url)
                     return s.scheme+'://'+s.netloc+location
+        elif response_code.startswith('2'):
+            if self.meta_tags and 'refresh' in self.meta_tags:
+                redir_loc = self.meta_tags['refresh']
+                m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
+                if m:
+                    return m.group(1)
 
 
         return '-'
