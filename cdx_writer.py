@@ -60,6 +60,9 @@ class CDX_Writer(object):
     # parse_http_header()
     #___________________________________________________________________________
     def parse_http_header(self, header_name):
+        if self.headers is None:
+            return None
+
         pattern = re.compile(header_name+':\s*(.+)', re.I)
         for line in iter(self.headers):
             m = pattern.match(line)
@@ -104,7 +107,10 @@ class CDX_Writer(object):
 
         ###TODO: is there a faster way than actually parsing the html?
         ###maybe use a regex, or maybe just parse the <head>.
-        html = lxml.html.document_fromstring(html_str)
+        try:
+            html = lxml.html.document_fromstring(html_str)
+        except lxml.etree.ParserError:
+            return meta_tags
 
         try:
             head = html.head
@@ -121,10 +127,11 @@ class CDX_Writer(object):
             if name is not None:
                 name = name.lower()
                 content = meta.get('content')
-                if name not in meta_tags:
-                    meta_tags[name] = content
-                else:
-                    meta_tags[name] += ',' + content
+                if content is not None:
+                    if name not in meta_tags:
+                        meta_tags[name] = content
+                    else:
+                        meta_tags[name] += ',' + content
 
         return meta_tags
 
@@ -235,34 +242,42 @@ class CDX_Writer(object):
         else:
             return 'warc/'+record.type
 
+    # urljoin_with_fragments()
+    #___________________________________________________________________________
+    def urljoin_with_fragments(self, base, url):
+        """urlparse.urljoin removes blank fragments (trailing #),
+        even if allow_fragments is set to True, so do this manually
+        """
+        if url.lower().startswith('http'):
+            return url
+        else:
+            if not url.startswith('/'):
+                url = '/'+url
+            s = urlsplit(base)
+            return s.scheme+'://'+s.netloc+url
+
 
     # get_redirect() //field "r"
     #___________________________________________________________________________
     def get_redirect(self, record):
         response_code = self.response_code
 
+        ## it turns out that the refresh tag is being used in both
+        ## 2xx and 3xx responses.
         #only deal with 2xx and 3xx responses:
-        if 3 != len(response_code):
-            return '-'
+        #if 3 != len(response_code):
+        #    return '-'
 
-        if response_code.startswith('3'):
-            location = self.parse_http_header('location')
-            if location:
-                # urlparse.urljoin removes blank fragments (trailing #),
-                # even if allow_fragments is set to True, so do this manually
-                #return urljoin(record.url, location)
-                if location.lower().startswith('http'):
-                    return location
-                else:
-                    s = urlsplit(record.url)
-                    return s.scheme+'://'+s.netloc+location
-        elif response_code.startswith('2'):
-            if self.meta_tags and 'refresh' in self.meta_tags:
-                redir_loc = self.meta_tags['refresh']
-                m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
-                if m:
-                    return m.group(1)
-
+        #if response_code.startswith('3'):
+        location = self.parse_http_header('location')
+        if location:
+            return self.urljoin_with_fragments(record.url, location)
+        #elif response_code.startswith('2'):
+        if self.meta_tags and 'refresh' in self.meta_tags:
+            redir_loc = self.meta_tags['refresh']
+            m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
+            if m:
+                return self.urljoin_with_fragments(record.url, m.group(1))
 
         return '-'
 
@@ -312,7 +327,7 @@ class CDX_Writer(object):
                 self.headers, self.content = self.parse_headers_and_content(record)
                 self.mime_type             = self.get_mime_type(record, use_precalculated_value=False)
                 self.response_code         = self.get_response_code(record, use_precalculated_value=False)
-                #self.meta_tags             = self.parse_meta_tags(record)
+                self.meta_tags             = self.parse_meta_tags(record)
 
                 s = ''
                 for field in self.format.split():
