@@ -77,7 +77,7 @@ class CDX_Writer(object):
         if content_type is None:
             return 'unk'
 
-        m = re.match('(.+);', content_type)
+        m = re.match('(.+?);', content_type)
         if m:
             return m.group(1)
         else:
