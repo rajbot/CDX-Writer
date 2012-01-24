@@ -249,12 +249,13 @@ class CDX_Writer(object):
         even if allow_fragments is set to True, so do this manually
         """
         if url.lower().startswith('http'):
-            return url
+            return url.replace(' ', '%20')
         else:
             if not url.startswith('/'):
                 url = '/'+url
             s = urlsplit(base)
-            return s.scheme+'://'+s.netloc+url
+            abs_url = s.scheme+'://'+s.netloc+url
+            return abs_url.replace(' ', '%20')
 
 
     # get_redirect() //field "r"
@@ -262,8 +263,11 @@ class CDX_Writer(object):
     def get_redirect(self, record):
         response_code = self.response_code
 
-        ## it turns out that the refresh tag is being used in both
-        ## 2xx and 3xx responses.
+        ## It turns out that the refresh tag is being used in both 2xx and 3xx
+        ## responses, so always check both the http location header and the meta
+        ## tags. Also, the java version passes spaces through to the cdx file,
+        ## which might break tools that split cdx lines on whitespace.
+
         #only deal with 2xx and 3xx responses:
         #if 3 != len(response_code):
         #    return '-'
