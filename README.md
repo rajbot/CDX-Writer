@@ -5,11 +5,12 @@ Usage: `cdx_writer.py [options] warc.gz`
 Options:
 
     -h, --help            show this help message and exit
-    -f FORMAT, --format=FORMAT
-                          A space-separated list of fields [default: 'N b a m s k r M S V g']
+    --format=FORMAT       A space-separated list of fields [default: 'N b a m s k r M S V g']
     --use-full-path       Use the full path of the warc file in the 'g' field
-    --use-item-path       Use IA item path of the warc file in the 'g' field.
-                          Similar to --use-full-path, but removes /n/items/ prefix from file path.
+    --file-prefix=PREFIX  Path prefix for warc file name in the 'g' field.
+                          Useful if you are going to relocate the warc.gz file
+                          after processing it.
+
 
 Output is written to stdout. The first line of output is the CDX header.
 This header line begins with a space so that the cdx file can be passed
