@@ -3,6 +3,7 @@ Python script to create CDX index files of WARC data.
 Usage: `cdx_writer.py [options] warc.gz`
 
 Options:
+
     -h, --help            show this help message and exit
     -f FORMAT, --format=FORMAT
                           A space-separated list of fields [default: 'N b a m s k r M S V g']
