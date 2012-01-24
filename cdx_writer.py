@@ -12,6 +12,7 @@ dispatch loop in make_cdx using getattr().
 from warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt          #from https://github.com/rajbot/surt
 
+import os
 import re
 import sys
 import base64
@@ -27,7 +28,7 @@ from optparse  import OptionParser
 class CDX_Writer(object):
 
     #___________________________________________________________________________
-    def __init__(self, file, format):
+    def __init__(self, file, format, use_full_path=False, use_item_path=False):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -56,6 +57,14 @@ class CDX_Writer(object):
         self.content       = None
         self.meta_tags     = None
         self.response_code = None
+
+        if use_full_path:
+            self.warc_path = os.path.abspath(file)
+        elif use_item_path:
+            warc_path = os.path.abspath(file)
+            self.warc_path = re.sub('/\d+/items/', '', warc_path)
+        else:
+            self.warc_path = file
 
     # parse_http_header()
     #___________________________________________________________________________
@@ -200,7 +209,7 @@ class CDX_Writer(object):
     # get_file_name() //field "g"
     #___________________________________________________________________________
     def get_file_name(self, record):
-        return self.file
+        return self.warc_path
 
     # get_new_style_checksum() //field "k"
     #___________________________________________________________________________
@@ -355,11 +364,17 @@ class CDX_Writer(object):
 #_______________________________________________________________________________
 if __name__ == '__main__':
 
-    parser = OptionParser(usage="%prog [options] warc")
+    parser = OptionParser(usage="%prog [options] warc.gz")
+    parser.set_defaults(format        = "N b a m s k r M S V g",
+                        use_full_path = False,
+                        use_item_path = False,
+                       )
 
-    parser.add_option("-f", "--format", dest="format")
-
-    parser.set_defaults(format="N b a m s k r M S V g")
+    parser.add_option("-f", "--format", dest="format", help="A space-separated list of fields [default: '%default']")
+    parser.add_option("--use-full-path", dest="use_full_path", action="store_true", help="Use the full path of the warc file in the 'g' field")
+    parser.add_option("--use-item-path", dest="use_item_path", action="store_true", help="Use IA item path of the warc file in the 'g' field."
+                      " Similar to --use-full-path, but removes /n/items/ prefix from file path."
+                     )
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -367,5 +382,8 @@ if __name__ == '__main__':
         parser.print_help()
         exit(-1)
 
-    cdx_writer = CDX_Writer(input_files[0], options.format)
+    cdx_writer = CDX_Writer(input_files[0], options.format,
+                            use_full_path = options.use_full_path,
+                            use_item_path = options.use_item_path,
+                           )
     cdx_writer.make_cdx()

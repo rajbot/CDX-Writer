@@ -1,10 +1,14 @@
 Python script to create CDX index files of WARC data.
 
-Usage:
-`cdx_writer.py [--format format_str] file.warc.gz`
+Usage: `cdx_writer.py [options] warc.gz`
 
-`--format` flag specifies the list of fields to include. If `--format`
-is not supplied, the default format "N b a m s k r M S V g" is used.
+Options:
+    -h, --help            show this help message and exit
+    -f FORMAT, --format=FORMAT
+                          A space-separated list of fields [default: 'N b a m s k r M S V g']
+    --use-full-path       Use the full path of the warc file in the 'g' field
+    --use-item-path       Use IA item path of the warc file in the 'g' field.
+                          Similar to --use-full-path, but removes /n/items/ prefix from file path.
 
 Output is written to stdout. The first line of output is the CDX header.
 This header line begins with a space so that the cdx file can be passed
