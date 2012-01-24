@@ -1,63 +1,31 @@
 Python script to create CDX index files of WARC data.
 
-`--format` flag specifies the list of fields to include.
+Usage:
+`cdx_writer.py [--format format_str] file.warc.gz`
 
-The format syntax can is specified here, and is copied below:
-* http://www.archive.org/web/researcher/cdx_legend.php
-* https://archive-access.svn.sourceforge.net/svnroot/archive-access/trunk/archive-access/projects/wayback/wayback-core/src/main/java/org/archive/wayback/resourceindex/cdx/format/CDXFormat.java
+`--format` flag specifies the list of fields to include. If `--format`
+is not supplied, the default format "N b a m s k r M S V g" is used.
 
-    The default first line of a CDX file is :
-    CDX A b e a m s c k r V v D d g M n
+Output is written to stdout. The first line of output is the CDX header.
+This header line begins with a space so that the cdx file can be passed
+through `sort` while keeping the header at the top.
 
+The supported format options are:
 
-    The letters use in dat files and cdx files are as follows :
-
-    A canonized url
-    B news group
-    C rulespace category ***
-    D compressed dat file offset
-    F canonized frame
-    G multi-columm language description (* soon)
-    H canonized host
-    I canonized image
-    J canonized jump point
-    K Some weird FBIS what's changed kinda thing
-    L canonized link
     M meta tags (AIF) *
     N massaged url
-    P canonized path
-    Q language string
-    R canonized redirect
-    U uniqness ***
+    S compressed record size
     V compressed arc file offset *
-    X canonized url in other href tages
-    Y canonized url in other src tags
-    Z canonized url found in script
     a original url **
     b date **
-    c old style checksum *
-    d uncompressed dat file offset
-    e IP **
-    f frame *
     g file name
-    h original host
-    i image *
-    j original jump point
     k new style checksum *
-    l link *
     m mime type of original document *
-    n arc document length *
-    o port
-    p original path
     r redirect *
     s response code *
-    t title *
-    v uncompressed arc file offset *
-    x url in other href tages *
-    y url in other src tags *
-    z url found in script *
-    # comment
 
     * in alexa-made dat file
     ** in alexa-made dat file meta-data line
-    *** future data
+
+More information about the CDX format syntax can be found here:
+http://www.archive.org/web/researcher/cdx_legend.php
