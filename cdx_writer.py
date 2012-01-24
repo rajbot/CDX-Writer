@@ -318,7 +318,7 @@ class CDX_Writer(object):
     def make_cdx(self):
         print ' CDX ' + self.format #print header
 
-        fh = ArchiveRecord.open_archive(self.file, gzip="auto")
+        fh = ArchiveRecord.open_archive(self.file, gzip="auto", mode="r")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
             self.offset = offset
 
