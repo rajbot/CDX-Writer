@@ -58,6 +58,10 @@ class CDX_Writer(object):
         self.meta_tags     = None
         self.response_code = None
 
+        #Large html files cause lxml to segfault
+        #problematic file was 154MB, we'll stop at 5MB
+        self.lxml_parse_limit = 5 * 1024 * 1024
+
         if use_full_path:
             self.warc_path = os.path.abspath(file)
         elif file_prefix:
@@ -111,6 +115,10 @@ class CDX_Writer(object):
         #lxml.html can't parse blank documents
         html_str = self.content.strip()
         if '' == html_str:
+            return meta_tags
+
+        #lxml can't handle large documents
+        if record.content_length > self.lxml_parse_limit:
             return meta_tags
 
         ###TODO: is there a faster way than actually parsing the html?
