@@ -142,7 +142,10 @@ class CDX_Writer(object):
 
             if name is not None:
                 name = name.lower()
-                content = meta.get('content')
+                try:
+                    content = meta.get('content')
+                except UnicodeDecodeError:
+                    continue
                 if content is not None:
                     if name not in meta_tags:
                         meta_tags[name] = content
