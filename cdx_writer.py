@@ -91,7 +91,12 @@ class CDX_Writer(object):
 
         m = re.match('(.+?);', content_type)
         if m:
-            return m.group(1)
+            type = m.group(1).strip()
+            if '' == type:
+                # some http responses end abruptly: ...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n'
+                return 'unk'
+            else:
+                return type
         else:
             return content_type
 
