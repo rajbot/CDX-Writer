@@ -56,7 +56,6 @@ cdx_writer.py returns 'unk' in this case. Example WARC Record:
 * archive-access removes unicode characters from redirect urls, cdx_writer.py version keeps them
 
 ### Differences in Meta Tags:
-Meta Tags:
-* archive-access version doesn't parse multiple html <meta> tags, only the first one
+* archive-access version doesn't parse multiple html meta tags, only the first one
 * archive-access misses FI meta tags sometimes
 * cdx_writer.py always returns tags in A, F, I order. archive-access does not use a consistent order
