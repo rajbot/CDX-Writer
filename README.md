@@ -1,5 +1,7 @@
+# cdx_writer.py
 Python script to create CDX index files of WARC data.
 
+## Usage
 Usage: `cdx_writer.py [options] warc.gz`
 
 Options:
@@ -16,6 +18,7 @@ Output is written to stdout. The first line of output is the CDX header.
 This header line begins with a space so that the cdx file can be passed
 through `sort` while keeping the header at the top.
 
+## Format
 The supported format options are:
 
     M meta tags (AIF) *
@@ -35,3 +38,25 @@ The supported format options are:
 
 More information about the CDX format syntax can be found here:
 http://www.archive.org/web/researcher/cdx_legend.php
+
+
+## Differences between cdx_writer.py and access-access cdx files
+The CDX files produced by the [archive-access](http://sourceforge.net/projects/archive-access/)
+produce different CDX lines in these cases:
+
+### Differences in MIME Type:
+* archive-access does not parse mime type for large warc payloads, and just returns 'unk'
+* archive-access returns a "close" mime type when a Connection: close header is sent, then a Content-Type HTTP header is sent with a blank value, and then the connection is immediately closed.
+cdx_writer.py returns 'unk' in this case. Example WARC Record:
+    <code>...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n</code>
+
+### Differences in Redirect urls:
+* archive-access removes /../ and /./ from redirects
+* archive-access does not escape whitespace, cdx_writer.py uses %20 escaping so we can split these files on whitespace.
+* archive-access removes unicode characters from redirect urls, cdx_writer.py version keeps them
+
+### Differences in Meta Tags:
+Meta Tags:
+* archive-access version doesn't parse multiple html <meta> tags, only the first one
+* archive-access misses FI meta tags sometimes
+* cdx_writer.py always returns tags in A, F, I order. archive-access does not use a consistent order

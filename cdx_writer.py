@@ -89,14 +89,14 @@ class CDX_Writer(object):
         if content_type is None:
             return 'unk'
 
+        # some http responses end abruptly: ...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n'
+        content_type = content_type.strip()
+        if '' == content_type:
+            return 'unk'
+
         m = re.match('(.+?);', content_type)
         if m:
-            type = m.group(1).strip()
-            if '' == type:
-                # some http responses end abruptly: ...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n'
-                return 'unk'
-            else:
-                return type
+            return m.group(1)
         else:
             return content_type
 
@@ -165,12 +165,19 @@ class CDX_Writer(object):
     def get_AIF_meta_tags(self, record):
         """robot metatags, if present, should be in this order: A, F, I
         """
-        if not self.meta_tags:
-            return '-'
-        if 'robots' not in self.meta_tags:
-            return '-'
+        x_robots_tag = self.parse_http_header('x-robots-tag')
 
-        robot_tags = self.meta_tags['robots'].split(',')
+        if x_robots_tag is None:
+            if not self.meta_tags:
+                return '-'
+            if 'robots' not in self.meta_tags:
+                return '-'
+
+        robot_tags = []
+        if self.meta_tags and 'robots' in self.meta_tags:
+            robot_tags += self.meta_tags['robots'].split(',')
+        if x_robots_tag:
+            robot_tags += x_robots_tag.split(',')
         robot_tags = [x.strip().lower() for x in robot_tags]
 
         s = ''
