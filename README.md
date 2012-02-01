@@ -44,7 +44,7 @@ http://www.archive.org/web/researcher/cdx_legend.php
 
 ## Differences between cdx_writer.py and access-access cdx files
 The CDX files produced by the [archive-access](http://sourceforge.net/projects/archive-access/)
-produce different CDX lines in these cases:
+package produce different CDX lines in these cases:
 
 ### Differences in SURTs:
 * archive-access doesn't encode the %7F character in SURTs
