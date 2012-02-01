@@ -70,5 +70,5 @@ cdx_writer.py returns 'unk' in this case. Example WARC Record:
 
 
 ### Differences in HTTP Response Codes
-# archive-access returns response code 0 if HTTP header line contains unicode:
+* archive-access returns response code 0 if HTTP header line contains unicode:
     <code>HTTP/1.1 302 D\xe9plac\xe9 Temporairement\r\n...</code>
