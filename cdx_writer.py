@@ -27,7 +27,7 @@ from optparse  import OptionParser
 class CDX_Writer(object):
 
     #___________________________________________________________________________
-    def __init__(self, file, format, use_full_path=False, file_prefix=None):
+    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -44,10 +44,11 @@ class CDX_Writer(object):
 
         self.file   = file
         self.format = format
+        self.all_records  = all_records
         self.crlf_pattern = re.compile('\r?\n\r?\n')
 
-        #this is what wayback uses:
-        self.fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20120112102659"
+        #similar to what what the wayback uses:
+        self.fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20120112102659-python"
 
         #these fields are set for each record in the warc
         self.offset        = 0
@@ -268,7 +269,7 @@ class CDX_Writer(object):
         elif 'response' == record.type:
             return record.content_type
         elif 'warcinfo' == record.type:
-            return 'warc-info' #why special case this?
+            return 'warc-info'
         else:
             return 'warc/'+record.type
 
@@ -402,6 +403,9 @@ class CDX_Writer(object):
             self.offset = offset
 
             if record:
+                if not self.all_records and 'application/http; msgtype=response' != record.content_type:
+                    continue
+
                 ### precalculated data that is used multiple times
                 self.headers, self.content = self.parse_headers_and_content(record)
                 self.mime_type             = self.get_mime_type(record, use_precalculated_value=False)
@@ -434,6 +438,7 @@ if __name__ == '__main__':
     parser.set_defaults(format        = "N b a m s k r M S V g",
                         use_full_path = False,
                         file_prefix   = None,
+                        all_records   = False,
                        )
 
     parser.add_option("--format",  dest="format", help="A space-separated list of fields [default: '%default']")
@@ -441,6 +446,7 @@ if __name__ == '__main__':
     parser.add_option("--file-prefix",   dest="file_prefix", help="Path prefix for warc file name in the 'g' field."
                       " Useful if you are going to relocate the warc.gz file after processing it."
                      )
+    parser.add_option("--all-records",   dest="all_records", action="store_true", help="By default we only index http responses. Use this flag to index all WARC records in the file")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -451,5 +457,6 @@ if __name__ == '__main__':
     cdx_writer = CDX_Writer(input_files[0], options.format,
                             use_full_path = options.use_full_path,
                             file_prefix   = options.file_prefix,
+                            all_records   = options.all_records,
                            )
     cdx_writer.make_cdx()

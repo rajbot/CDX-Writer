@@ -12,6 +12,8 @@ Options:
     --file-prefix=PREFIX  Path prefix for warc file name in the 'g' field.
                           Useful if you are going to relocate the warc.gz file
                           after processing it.
+    --all-records         By default we only index http responses. Use this flag
+                          to index all WARC records in the file.
 
 
 Output is written to stdout. The first line of output is the CDX header.
