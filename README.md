@@ -51,14 +51,16 @@ package produce different CDX lines in these cases:
 
 ### Differences in MIME Type:
 * archive-access does not parse mime type for large warc payloads, and just returns 'unk'
-* archive-access returns a "close" mime type when a Connection: close header is sent, then a Content-Type HTTP header is sent with a blank value, and then the connection is immediately closed.
-cdx_writer.py returns 'unk' in this case. Example WARC Record:
+* if the HTTP Content-Type header is sent with a blank value, archive-access
+returns the valude of the previous header as the mime type. cdx_writer.py
+returns 'unk' in this case. Example WARC Record (returns "close" as the mime type):
     <code>...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n</code>
 
 ### Differences in Redirect urls:
 * archive-access does not escape whitespace, cdx_writer.py uses %20 escaping so we can split these files on whitespace.
 * archive-access removes unicode characters from redirect urls, cdx_writer.py version keeps them
-* archive-access sometimes doesn't turn relative URLs into absolute urls
+* archive-access does not decode html entities in redirect urls
+* archive-access sometimes does not turn relative URLs into absolute urls
 * archive-access sometimes does not remove /../ from redirect urls
 * archive-access uses the value from the previous HTTP header for the redirect url if the location header is empty
 * cdx_writer.py only looks for http-equiv=refresh meta tag inside head elements
