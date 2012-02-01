@@ -45,7 +45,7 @@ The CDX files produced by the [archive-access](http://sourceforge.net/projects/a
 produce different CDX lines in these cases:
 
 ### Differences in SURTs:
-* archive-access decodes %7F in SURT urls
+* archive-access doesn't encode the %7F character in SURTs
 
 ### Differences in MIME Type:
 * archive-access does not parse mime type for large warc payloads, and just returns 'unk'
