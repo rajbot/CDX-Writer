@@ -51,8 +51,8 @@ package produce different CDX lines in these cases:
 
 ### Differences in MIME Type:
 * archive-access does not parse mime type for large warc payloads, and just returns 'unk'
-* if the HTTP Content-Type header is sent with a blank value, archive-access
-returns the valude of the previous header as the mime type. cdx_writer.py
+* If the HTTP Content-Type header is sent with a blank value, archive-access
+returns the value of the previous header as the mime type. cdx_writer.py
 returns 'unk' in this case. Example WARC Record (returns "close" as the mime type):
     <code>...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n</code>
 
