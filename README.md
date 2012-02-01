@@ -44,6 +44,9 @@ http://www.archive.org/web/researcher/cdx_legend.php
 The CDX files produced by the [archive-access](http://sourceforge.net/projects/archive-access/)
 produce different CDX lines in these cases:
 
+### Differences in SURTs:
+* archive-access decodes %7F in SURT urls
+
 ### Differences in MIME Type:
 * archive-access does not parse mime type for large warc payloads, and just returns 'unk'
 * archive-access returns a "close" mime type when a Connection: close header is sent, then a Content-Type HTTP header is sent with a blank value, and then the connection is immediately closed.
@@ -51,11 +54,21 @@ cdx_writer.py returns 'unk' in this case. Example WARC Record:
     <code>...Content-Length: 0\r\nConnection: close\r\nContent-Type: \r\n\r\n\r\n\r\n</code>
 
 ### Differences in Redirect urls:
-* archive-access removes /../ and /./ from redirects
 * archive-access does not escape whitespace, cdx_writer.py uses %20 escaping so we can split these files on whitespace.
 * archive-access removes unicode characters from redirect urls, cdx_writer.py version keeps them
+* archive-access sometimes doesn't turn relative URLs into absolute urls
+* archive-access sometimes does not remove /../ from redirect urls
+* archive-access uses the value from the previous HTTP header for the redirect url if the location header is empty
+* cdx_writer.py only looks for http-equiv=refresh meta tag inside head elements
 
 ### Differences in Meta Tags:
+* cdx_writer.py only looks for meta tags in the head element
+* cdx_writer.py uses lxml.html, which sometimes incorrectly parses meta tags as children of the body element instead of the head
 * archive-access version doesn't parse multiple html meta tags, only the first one
 * archive-access misses FI meta tags sometimes
 * cdx_writer.py always returns tags in A, F, I order. archive-access does not use a consistent order
+
+
+### Differences in HTTP Response Codes
+# archive-access returns response code 0 if HTTP header line contains unicode:
+    <code>HTTP/1.1 302 D\xe9plac\xe9 Temporairement\r\n...</code>

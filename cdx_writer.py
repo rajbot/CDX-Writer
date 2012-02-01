@@ -20,7 +20,6 @@ import hashlib
 import urllib
 import urlparse
 import lxml.html
-from urlparse  import urlsplit
 from datetime  import datetime
 from optparse  import OptionParser
 
@@ -273,20 +272,65 @@ class CDX_Writer(object):
         else:
             return 'warc/'+record.type
 
-    # urljoin_with_fragments()
+    # urljoin_and_normalize()
     #___________________________________________________________________________
-    def urljoin_with_fragments(self, base, url):
+    @classmethod
+    def urljoin_and_normalize(self, base, url):
         """urlparse.urljoin removes blank fragments (trailing #),
-        even if allow_fragments is set to True, so do this manually
+        even if allow_fragments is set to True, so do this manually.
+
+        Also, normalize /../ and /./ in url paths.
+
+        Finally, encode spaces in the url with %20 so that we can
+        later split on whitespace.
+
+        Usage (run doctests with  `python -m doctest -v cdx_writer.py`):
+        >>> base = 'http://archive.org/a/b/'
+        >>> url  = '/c/d/../e/foo'
+        >>> CDX_Writer.urljoin_and_normalize(base, url)
+        'http://archive.org/c/e/foo'
+
+        urljoin() doesn't normalize if the url starts with a slash, and
+        os.path.normalize() has many issues, so normalize using regexes
+
+        >>> url = '/foo/./bar/#'
+        >>> CDX_Writer.urljoin_and_normalize(base, url)
+        'http://archive.org/foo/bar/#'
+
+        >>> base = 'http://archive.org'
+        >>> url = '../site'
+        >>> CDX_Writer.urljoin_and_normalize(base, url)
+        'http://archive.org/site'
+
+        >>> base = 'http://www.seomoz.org/page-strength/http://www.example.com/'
+        >>> url  = 'http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/'
+        >>> CDX_Writer.urljoin_and_normalize(base, url)
+        'http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/'
         """
-        if url.lower().startswith('http'):
-            return url.replace(' ', '%20')
+        joined_url = urlparse.urljoin(base, url)
+
+        # We were using os.path.normpath, but had to add too many patches
+        # when it was doing the wrong thing, such as turning http:// into http:/
+        m = re.match('(https?://.+?/)', joined_url)
+        if m:
+            domain = joined_url[:m.end(1)]
+            path   = joined_url[m.end(1):]
+            if path.startswith('../'):
+                path = path[3:]
+            norm_url = domain + re.sub('/[^/]+/\.\./', '/', path)
+            norm_url = re.sub('/\./', '/', norm_url)
         else:
-            if not url.startswith('/'):
-                url = '/'+url
-            s = urlsplit(base)
-            abs_url = s.scheme+'://'+s.netloc+url
-            return abs_url.replace(' ', '%20')
+            norm_url = joined_url
+
+        # deal with empty query strings and empty fragments, which
+        # urljoin sometimes removes
+        if url.endswith('?') and not norm_url.endswith('?'):
+            norm_url += '?'
+        elif url.endswith('#') and not norm_url.endswith('#'):
+            norm_url += '#'
+
+        #encode spaces
+        return norm_url.replace(' ', '%20')
 
 
     # get_redirect() //field "r"
@@ -306,13 +350,13 @@ class CDX_Writer(object):
         #if response_code.startswith('3'):
         location = self.parse_http_header('location')
         if location:
-            return self.urljoin_with_fragments(record.url, location)
+            return self.urljoin_and_normalize(record.url, location)
         #elif response_code.startswith('2'):
         if self.meta_tags and 'refresh' in self.meta_tags:
             redir_loc = self.meta_tags['refresh']
             m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
             if m:
-                return self.urljoin_with_fragments(record.url, m.group(1))
+                return self.urljoin_and_normalize(record.url, m.group(1))
 
         return '-'
 
