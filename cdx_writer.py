@@ -418,7 +418,7 @@ class CDX_Writer(object):
             self.offset = offset
 
             if record:
-                if not self.all_records and 'application/http; msgtype=response' != record.content_type:
+                if not self.all_records and ('response' != record.type or 'text/dns' == record.content_type):
                     continue
 
                 ### precalculated data that is used multiple times
