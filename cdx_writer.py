@@ -155,7 +155,9 @@ class CDX_Writer(object):
                     if name not in meta_tags:
                         meta_tags[name] = content
                     else:
-                        meta_tags[name] += ',' + content
+                        if 'refresh' != name:
+                            #for redirect urls, we only want the first refresh tag
+                            meta_tags[name] += ',' + content
 
         return meta_tags
 
