@@ -225,6 +225,14 @@ class CDX_Writer(object):
     # get_date() //field "b"
     #___________________________________________________________________________
     def get_date(self, record):
+        #warcs and arcs use a different date format
+        #consider using dateutil.parser instead
+
+        if 14 == len(record.date):
+            #arc record already has date in the format we need
+            return record.date
+
+        #warc record
         date = datetime.strptime(record.date, "%Y-%m-%dT%H:%M:%SZ")
         return date.strftime("%Y%m%d%H%M%S")
 
@@ -244,12 +252,17 @@ class CDX_Writer(object):
             digest = record.get_header('WARC-Payload-Digest')
             return digest.replace('sha1:', '')
         elif 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
-            # Where does this WARC-Payload-Digest header come from?
-            # It does not match the sha1(record.content[1]), which might
-            # have something to do with the different content-type headers
-            # in the warc header and the actual http response
+            # The WARC-Payload-Digest header is base-32 sha1 of the content:
+            # base64.b32encode(hashlib.sha1(self.content).digest())
             digest = record.get_header('WARC-Payload-Digest')
             return digest.replace('sha1:', '')
+        elif 'response' == record.type and self.content is not None:
+            # This is an arc record, and doesn't have the sha1 in the
+            # WARC-Payload-Digest header. We calculate the sha1 of the content
+            # after stripping off the http headers. If this is a HTTP response,
+            # self.content will contain the response without http headers.
+            h = hashlib.sha1(self.content)
+            return base64.b32encode(h.digest())
         else:
             h = hashlib.sha1(record.content[1])
             return base64.b32encode(h.digest())
