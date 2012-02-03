@@ -413,12 +413,17 @@ class CDX_Writer(object):
     def make_cdx(self):
         print ' CDX ' + self.format #print header
 
+        if not self.all_records:
+            #filter cdx lines if --all-records isn't specified
+            allowed_record_types     = set(['response', 'revisit'])
+            disallowed_content_types = set(['text/dns'])
+
         fh = ArchiveRecord.open_archive(self.file, gzip="auto", mode="r")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
             self.offset = offset
 
             if record:
-                if not self.all_records and ('response' != record.type or 'text/dns' == record.content_type):
+                if not self.all_records and (record.type not in allowed_record_types or record.content_type in disallowed_content_types):
                     continue
 
                 ### precalculated data that is used multiple times
