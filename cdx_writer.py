@@ -140,6 +140,9 @@ class CDX_Writer(object):
         if not ('response' == record.type and 'text/html' == self.mime_type):
             return None
 
+        if self.content is None:
+            return None
+
         meta_tags = {}
 
         #lxml.html can't parse blank documents
@@ -438,7 +441,11 @@ class CDX_Writer(object):
         """
 
         if 'response' == record.type and record.content[1].startswith('HTTP'):
-            headers, content = self.crlf_pattern.split(record.content[1], 1)
+            try:
+                headers, content = self.crlf_pattern.split(record.content[1], 1)
+            except ValueError:
+                headers = record.content[1]
+                content = None
             headers = headers.splitlines()
         else:
             headers = None
