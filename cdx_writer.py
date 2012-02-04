@@ -100,6 +100,31 @@ class CDX_Writer(object):
         else:
             return content_type
 
+    # parse_charset()
+    #___________________________________________________________________________
+    def parse_charset(self):
+        charset = None
+        charset_pattern = re.compile('charset\s*=\s*([a-z0-9_\-]+)', re.I)
+
+        content_type = self.parse_http_header('content-type')
+        if content_type:
+            m = charset_pattern.search(content_type)
+            if m:
+                charset = m.group(1)
+
+
+        if charset is None and self.meta_tags is not None:
+            content_type = self.meta_tags.get('content-type')
+            if content_type:
+                m = charset_pattern.search(content_type)
+                if m:
+                    charset = m.group(1)
+
+        if charset:
+            charset = charset.replace('win-', 'windows-')
+
+        return charset
+
     # parse_meta_tags
     #___________________________________________________________________________
     def parse_meta_tags(self, record):
@@ -291,7 +316,7 @@ class CDX_Writer(object):
     # urljoin_and_normalize()
     #___________________________________________________________________________
     @classmethod
-    def urljoin_and_normalize(self, base, url):
+    def urljoin_and_normalize(self, base, url, charset):
         """urlparse.urljoin removes blank fragments (trailing #),
         even if allow_fragments is set to True, so do this manually.
 
@@ -323,6 +348,17 @@ class CDX_Writer(object):
         >>> CDX_Writer.urljoin_and_normalize(base, url)
         'http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/'
         """
+
+        if isinstance(url, str):
+            if charset is None:
+                #try utf-8 and hope for the best
+                url = url.decode('utf-8', 'ignore')
+            else:
+                try:
+                    url = url.decode(charset)
+                except LookupError:
+                    url = url.decode('utf-8', 'ignore')
+
         joined_url = urlparse.urljoin(base, url)
 
         # We were using os.path.normpath, but had to add too many patches
@@ -363,16 +399,18 @@ class CDX_Writer(object):
         #if 3 != len(response_code):
         #    return '-'
 
+        charset = self.parse_charset()
+
         #if response_code.startswith('3'):
         location = self.parse_http_header('location')
         if location:
-            return self.urljoin_and_normalize(record.url, location)
+            return self.urljoin_and_normalize(record.url, location, charset)
         #elif response_code.startswith('2'):
         if self.meta_tags and 'refresh' in self.meta_tags:
             redir_loc = self.meta_tags['refresh']
             m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
             if m:
-                return self.urljoin_and_normalize(record.url, m.group(1))
+                return self.urljoin_and_normalize(record.url, m.group(1), charset)
 
         return '-'
 
@@ -432,7 +470,7 @@ class CDX_Writer(object):
                 self.response_code         = self.get_response_code(record, use_precalculated_value=False)
                 self.meta_tags             = self.parse_meta_tags(record)
 
-                s = ''
+                s = u''
                 for field in self.format.split():
                     if not field in self.field_map:
                         sys.exit('Unknown field: ' + field)
@@ -440,8 +478,7 @@ class CDX_Writer(object):
                     endpoint = self.field_map[field].replace(' ', '_')
                     response = getattr(self, 'get_' + endpoint)(record)
                     s += response + ' '
-
-                print s.rstrip()
+                print s.rstrip().encode('utf-8')
                 #record.dump()
             elif errors:
                 pass # ignore
