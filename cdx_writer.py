@@ -359,7 +359,7 @@ class CDX_Writer(object):
             else:
                 try:
                     url = url.decode(charset)
-                except LookupError:
+                except (LookupError, UnicodeDecodeError):
                     url = url.decode('utf-8', 'ignore')
 
         joined_url = urlparse.urljoin(base, url)
