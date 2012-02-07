@@ -96,9 +96,13 @@ class CDX_Writer(object):
 
         m = re.match('(.+?);', content_type)
         if m:
-            return m.group(1)
-        else:
+            content_type = m.group(1)
+
+        if re.match('^[a-z\-\./]+$', content_type):
             return content_type
+        else:
+            return 'unk'
+
 
     # parse_charset()
     #___________________________________________________________________________
