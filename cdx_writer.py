@@ -283,11 +283,8 @@ class CDX_Writer(object):
             return digest.replace('sha1:', '')
         elif 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
             digest = record.get_header('WARC-Payload-Digest')
-            if digest is not None:
-                return digest.replace('sha1:', '')
-            else:
-                h = hashlib.sha1(self.content)
-                return base64.b32encode(h.digest())
+            #Our patched warc-tools fabricates this header if it is not present in the record
+            return digest.replace('sha1:', '')
         elif 'response' == record.type and self.content is not None:
             # This is an arc record, and doesn't have the sha1 in the
             # WARC-Payload-Digest header. We calculate the sha1 of the content
