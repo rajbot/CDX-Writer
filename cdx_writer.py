@@ -19,7 +19,6 @@ import base64
 import hashlib
 import urllib
 import urlparse
-import lxml.html
 from datetime  import datetime
 from optparse  import OptionParser
 
@@ -98,7 +97,7 @@ class CDX_Writer(object):
         if m:
             content_type = m.group(1)
 
-        if re.match('^[a-z\-\./]+$', content_type):
+        if re.match('^[a-z0-9\-\.\+/]+$', content_type):
             return content_type
         else:
             return 'unk'
@@ -158,38 +157,42 @@ class CDX_Writer(object):
         if record.content_length > self.lxml_parse_limit:
             return meta_tags
 
-        ###TODO: is there a faster way than actually parsing the html?
-        ###maybe use a regex, or maybe just parse the <head>.
-        try:
-            html = lxml.html.document_fromstring(html_str)
-        except lxml.etree.ParserError:
-            return meta_tags
+        # lxml was working great with ubuntu 10.04 / python 2.6
+        # On ubuntu 11.10 / python 2.7, lxml exhausts memory hits the ulimit
+        # on the same warc files. Unfortunately, we don't ship a virtualenv,
+        # so we're going to give up on lxml and use regexes to parse html :(
 
-        try:
-            head = html.head
-        except IndexError:
-            #this might have been an xml response
-            return meta_tags
+        meta_tags = {}
+        #we only want to look for meta tags that occur before the </head> tag
+        head_limit = None
+        m = re.search('(</head>)', html_str, re.I)
+        if m:
+            head_limit = m.start(1)
 
-        metas = head.xpath("//meta")
-        for meta in metas:
-            name = meta.get('name')
-            if name is None:
-                name = meta.get('http-equiv')
+        for x in re.finditer("(<meta[^>]+?>)", html_str, re.I):
+            if head_limit is not None and x.start(1) >= head_limit:
+                break
 
-            if name is not None:
-                name = name.lower()
-                try:
-                    content = meta.get('content')
-                except UnicodeDecodeError:
+            name = None
+            content = None
+            m = re.match('''<meta\s+.*(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s+content\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
+            if m:
+                name = m.group(2).lower()
+                content = m.group(5)
+            else:
+                m = re.match('''<meta\s+.*content\s*=\s*(['"]?)(.*?)(['"]?)\s+(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
+                if m:
+                    name = m.group(5).lower()
+                    content = m.group(2)
+                else:
                     continue
-                if content is not None:
-                    if name not in meta_tags:
-                        meta_tags[name] = content
-                    else:
-                        if 'refresh' != name:
-                            #for redirect urls, we only want the first refresh tag
-                            meta_tags[name] += ',' + content
+
+            if name not in meta_tags:
+                meta_tags[name] = content
+            else:
+                if 'refresh' != name:
+                    #for redirect urls, we only want the first refresh tag
+                    meta_tags[name] += ',' + content
 
         return meta_tags
 
@@ -313,6 +316,8 @@ class CDX_Writer(object):
         if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
             return self.parse_http_content_type_header(record)
         elif 'response' == record.type:
+            if record.content_type is None:
+                return 'unk'
             return record.content_type
         elif 'warcinfo' == record.type:
             return 'warc-info'
@@ -487,6 +492,11 @@ class CDX_Writer(object):
 
                     endpoint = self.field_map[field].replace(' ', '_')
                     response = getattr(self, 'get_' + endpoint)(record)
+                    #print self.offset
+                    #print record.compressed_record_size
+                    #print record.content_length
+                    #print endpoint
+                    #print repr(response)
                     s += response + ' '
                 print s.rstrip().encode('utf-8')
                 #record.dump()
