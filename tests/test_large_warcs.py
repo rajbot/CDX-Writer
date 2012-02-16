@@ -6,8 +6,8 @@ from pipes import quote
 
 warc_dir = '/warcs/'
 
-warcs = {'YTV-20120204035110-15431.warc.gz':  '151e5c4b95fde70a9973bd5359b6c6b1',
-         'WIDE-20120121174231-03025.warc.gz': '4b4b15279daf06c648563da4d15bf896', #from WIDE-20120121162724-crawl411
+warcs = {'YTV-20120204025848-crawl442/YTV-20120204035110-15431.warc.gz':   'b09c0e4dcd3a9568df30da2aab2f0e06',
+         'WIDE-20120121162724-crawl411/WIDE-20120121174231-03025.warc.gz': '4bcf22bff973acf389f2699e7b4b10e3',
         }
 
 for file, hash in warcs.iteritems():
