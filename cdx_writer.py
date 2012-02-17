@@ -318,7 +318,9 @@ class CDX_Writer(object):
         elif 'response' == record.type:
             if record.content_type is None:
                 return 'unk'
-            return record.content_type
+            #alexa arc files use 'no-type' instead of 'unk'
+            content_type = record.content_type.replace('no-type', 'unk')
+            return content_type
         elif 'warcinfo' == record.type:
             return 'warc-info'
         else:
