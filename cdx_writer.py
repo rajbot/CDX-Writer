@@ -297,6 +297,9 @@ class CDX_Writer(object):
             # WARC-Payload-Digest header. We calculate the sha1 of the content
             # after stripping off the http headers. If this is a HTTP response,
             # self.content will contain the response without http headers.
+            print repr(self.content)
+            print len(self.content)
+            print base64.b32encode(hashlib.sha1(self.content.strip()).digest())
             h = hashlib.sha1(self.content)
             return base64.b32encode(h.digest())
         else:
@@ -494,11 +497,13 @@ class CDX_Writer(object):
 
                     endpoint = self.field_map[field].replace(' ', '_')
                     response = getattr(self, 'get_' + endpoint)(record)
-                    #print self.offset
-                    #print record.compressed_record_size
-                    #print record.content_length
-                    #print endpoint
-                    #print repr(response)
+                    print self.offset
+                    print record.compressed_record_size
+                    print record.content_length
+                    print len(self.content)
+                    print repr(record.content[1])
+                    print endpoint
+                    print repr(response)
                     s += response + ' '
                 print s.rstrip().encode('utf-8')
                 #record.dump()
