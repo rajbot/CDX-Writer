@@ -299,9 +299,17 @@ class CDX_Writer(object):
             # self.content will contain the response without http headers.
             #print repr(self.content)
             #print len(self.content)
+            #print len(record.content[1])
             #print base64.b32encode(hashlib.sha1(self.content.strip()).digest())
-            h = hashlib.sha1(self.content)
-            return base64.b32encode(h.digest())
+
+            #Our patched warc-tools fabricates this header even for arc files
+            #so that we can skip large payloads
+            digest = record.get_header('WARC-Payload-Digest')
+            if digest is not None:
+                return digest.replace('sha1:', '')
+            else:
+                h = hashlib.sha1(self.content)
+                return base64.b32encode(h.digest())
         else:
             h = hashlib.sha1(record.content[1])
             return base64.b32encode(h.digest())
@@ -439,7 +447,7 @@ class CDX_Writer(object):
         if 'response' != record.type:
             return '-'
 
-        m = re.match("HTTP/\d\.\d (\d+)", record.content[1])
+        m = re.match("HTTP(?:/\d\.\d)? (\d+)", record.content[1])
         if m:
             return m.group(1)
         else:
