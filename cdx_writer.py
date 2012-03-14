@@ -432,7 +432,7 @@ class CDX_Writer(object):
         #elif response_code.startswith('2'):
         if self.meta_tags and 'refresh' in self.meta_tags:
             redir_loc = self.meta_tags['refresh']
-            m = re.search('\d+;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
+            m = re.search('\d+\s*;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
             if m:
                 return self.urljoin_and_normalize(record.url, m.group(1), charset)
 
