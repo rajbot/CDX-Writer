@@ -352,25 +352,25 @@ class CDX_Writer(object):
         Usage (run doctests with  `python -m doctest -v cdx_writer.py`):
         >>> base = 'http://archive.org/a/b/'
         >>> url  = '/c/d/../e/foo'
-        >>> CDX_Writer.urljoin_and_normalize(base, url)
-        'http://archive.org/c/e/foo'
+        >>> print CDX_Writer.urljoin_and_normalize(base, url, 'utf-8')
+        http://archive.org/c/e/foo
 
         urljoin() doesn't normalize if the url starts with a slash, and
         os.path.normalize() has many issues, so normalize using regexes
 
         >>> url = '/foo/./bar/#'
-        >>> CDX_Writer.urljoin_and_normalize(base, url)
-        'http://archive.org/foo/bar/#'
+        >>> print CDX_Writer.urljoin_and_normalize(base, url, 'utf-8')
+        http://archive.org/foo/bar/#
 
         >>> base = 'http://archive.org'
         >>> url = '../site'
-        >>> CDX_Writer.urljoin_and_normalize(base, url)
-        'http://archive.org/site'
+        >>> print CDX_Writer.urljoin_and_normalize(base, url, 'utf-8')
+        http://archive.org/site
 
         >>> base = 'http://www.seomoz.org/page-strength/http://www.example.com/'
         >>> url  = 'http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/'
-        >>> CDX_Writer.urljoin_and_normalize(base, url)
-        'http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/'
+        >>> print CDX_Writer.urljoin_and_normalize(base, url, 'utf-8')
+        http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/
         """
 
         if isinstance(url, str):
