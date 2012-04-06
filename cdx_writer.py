@@ -383,7 +383,12 @@ class CDX_Writer(object):
                 except (LookupError, UnicodeDecodeError):
                     url = url.decode('utf-8', 'ignore')
 
-        joined_url = urlparse.urljoin(base, url)
+        try:
+            joined_url = urlparse.urljoin(base, url)
+        except ValueError:
+            #some urls we find in arc files no longer parse with python 2.7,
+            #e.g. 'http://\x93\xe0\x90E\x83f\x81[\x83^\x93\xfc\x97\xcd.com/'
+            return '-'
 
         # We were using os.path.normpath, but had to add too many patches
         # when it was doing the wrong thing, such as turning http:// into http:/
