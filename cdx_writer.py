@@ -325,17 +325,24 @@ class CDX_Writer(object):
             return self.mime_type
 
         if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
-            return self.parse_http_content_type_header(record)
+            mime_type = self.parse_http_content_type_header(record)
         elif 'response' == record.type:
             if record.content_type is None:
-                return 'unk'
-            #alexa arc files use 'no-type' instead of 'unk'
-            content_type = record.content_type.replace('no-type', 'unk')
-            return content_type
+                mime_type = 'unk'
+            else:
+                #alexa arc files use 'no-type' instead of 'unk'
+                mime_type = record.content_type.replace('no-type', 'unk')
         elif 'warcinfo' == record.type:
-            return 'warc-info'
+            mime_type = 'warc-info'
         else:
-            return 'warc/'+record.type
+            mime_type = 'warc/'+record.type
+
+        try:
+            mime_type = mime_type.decode('ascii')
+        except (LookupError, UnicodeDecodeError):
+            mime_type = u'unk'
+
+        return mime_type
 
     # urljoin_and_normalize()
     #___________________________________________________________________________
