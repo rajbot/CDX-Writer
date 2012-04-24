@@ -504,6 +504,12 @@ class CDX_Writer(object):
                 if not self.all_records and (record.type not in allowed_record_types or record.content_type in disallowed_content_types):
                     continue
 
+                ### arc files from the live web proxy can have a negative content length and a missing payload
+                ### check the content_length from the arc header, not the computed payload size returned by record.content_length
+                content_length_str = record.get_header(record.CONTENT_LENGTH)
+                if content_length_str is not None and int(content_length_str) < 0:
+                    continue
+
                 ### precalculated data that is used multiple times
                 self.headers, self.content = self.parse_headers_and_content(record)
                 self.mime_type             = self.get_mime_type(record, use_precalculated_value=False)
@@ -520,6 +526,7 @@ class CDX_Writer(object):
                     #print self.offset
                     #print record.compressed_record_size
                     #print record.content_length
+                    #print record.headers
                     #print len(self.content)
                     #print repr(record.content[1])
                     #print endpoint
