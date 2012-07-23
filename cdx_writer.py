@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import base64
+import chardet
 import hashlib
 import urllib
 import urlparse
@@ -257,7 +258,22 @@ class CDX_Writer(object):
             url = 'warcinfo:/%s/%s' % (self.file, self.fake_build_version)
             return url
 
-        return record.url
+        url = record.url
+
+        # There are few arc files from 2002 that have non-ascii characters in
+        # the url field. These are not utf-8 characters, and the charset of the
+        # page might not be specified, so use chardet to try and make these usable.
+        if isinstance(url, str):
+            try:
+                url.decode('ascii')
+            except UnicodeDecodeError:
+                enc = chardet.detect(url)
+                if enc:
+                    url = url.decode(enc['encoding'])
+                else:
+                    url = url.decode('utf-8', ignore)
+
+        return url
 
     # get_date() //field "b"
     #___________________________________________________________________________
