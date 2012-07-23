@@ -271,7 +271,7 @@ class CDX_Writer(object):
                 if enc:
                     url = url.decode(enc['encoding'])
                 else:
-                    url = url.decode('utf-8', ignore)
+                    url = url.decode('utf-8', 'replace')
 
         return url
 
