@@ -285,6 +285,10 @@ class CDX_Writer(object):
             #arc record already has date in the format we need
             return record.date
 
+        if 16 == len(record.date):
+            #some very old arc records have 16-digit dates: 2000082305410049
+            return record.date[:14]
+
         #warc record
         date = datetime.strptime(record.date, "%Y-%m-%dT%H:%M:%SZ")
         return date.strftime("%Y%m%d%H%M%S")
