@@ -274,7 +274,7 @@ class CDX_Writer(object):
                         # something is so wrong that we probably can't recover this url
                         url = url.decode('Big5', 'replace')
                     else:
-                        url = url.decode(enc['encoding'])
+                        url = url.decode(enc['encoding'], 'replace')
                 else:
                     url = url.decode('utf-8', 'replace')
 
