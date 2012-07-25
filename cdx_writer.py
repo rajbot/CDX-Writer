@@ -269,7 +269,12 @@ class CDX_Writer(object):
             except UnicodeDecodeError:
                 enc = chardet.detect(url)
                 if enc:
-                    url = url.decode(enc['encoding'])
+                    if 'EUC-TW' == enc['encoding']:
+                        # We don't have the EUC-TW encoding installed, and most likely
+                        # something is so wrong that we probably can't recover this url
+                        url = url.decode('Big5', 'replace')
+                    else:
+                        url = url.decode(enc['encoding'])
                 else:
                     url = url.decode('utf-8', 'replace')
 
