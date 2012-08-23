@@ -412,7 +412,10 @@ class CDX_Writer(object):
                 #try utf-8 and hope for the best
                 url = url.decode('utf-8', 'replace')
             else:
-                url = url.decode(charset, 'replace')
+                try:
+                    url = url.decode(charset, 'replace')
+                except LookupError:
+                    url = url.decode('utf-8', 'replace')
 
         try:
             joined_url = urlparse.urljoin(base, url)
