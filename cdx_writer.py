@@ -371,6 +371,22 @@ class CDX_Writer(object):
 
         return mime_type
 
+
+    # to_unicode()
+    #___________________________________________________________________________
+    @classmethod
+    def to_unicode(self, s, charset):
+        if isinstance(s, str):
+            if charset is None:
+                #try utf-8 and hope for the best
+                s = s.decode('utf-8', 'replace')
+            else:
+                try:
+                    s = s.decode(charset, 'replace')
+                except LookupError:
+                    s = s.decode('utf-8', 'replace')
+        return s
+
     # urljoin_and_normalize()
     #___________________________________________________________________________
     @classmethod
@@ -407,15 +423,10 @@ class CDX_Writer(object):
         http://www.seomoz.org/trifecta/fetch/page/http://www.example.com/
         """
 
-        if isinstance(url, str):
-            if charset is None:
-                #try utf-8 and hope for the best
-                url = url.decode('utf-8', 'replace')
-            else:
-                try:
-                    url = url.decode(charset, 'replace')
-                except LookupError:
-                    url = url.decode('utf-8', 'replace')
+        url  = self.to_unicode(url, charset)
+
+        #the base url is from the arc/warc header, which doesn't specify a charset
+        base = self.to_unicode(base, 'utf-8')
 
         try:
             joined_url = urlparse.urljoin(base, url)
