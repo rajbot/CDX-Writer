@@ -462,31 +462,38 @@ class CDX_Writer(object):
     # get_redirect() //field "r"
     #___________________________________________________________________________
     def get_redirect(self, record):
-        response_code = self.response_code
-
-        ## It turns out that the refresh tag is being used in both 2xx and 3xx
-        ## responses, so always check both the http location header and the meta
-        ## tags. Also, the java version passes spaces through to the cdx file,
-        ## which might break tools that split cdx lines on whitespace.
-
-        #only deal with 2xx and 3xx responses:
-        #if 3 != len(response_code):
-        #    return '-'
-
-        charset = self.parse_charset()
-
-        #if response_code.startswith('3'):
-        location = self.parse_http_header('location')
-        if location:
-            return self.urljoin_and_normalize(record.url, location, charset)
-        #elif response_code.startswith('2'):
-        if self.meta_tags and 'refresh' in self.meta_tags:
-            redir_loc = self.meta_tags['refresh']
-            m = re.search('\d+\s*;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
-            if m:
-                return self.urljoin_and_normalize(record.url, m.group(1), charset)
-
+        """Aaron, Ilya, and Kenji have proposed using '-' in the redirect column
+        unconditionally, after a discussion on Sept 5, 2012. It tirms pit the
+        redirect column of the cdx has no effect on the Wayback Machine, and
+        there were issues with parsing unescaped characters found in redirects.
+        """
         return '-'
+
+        # response_code = self.response_code
+        #
+        # ## It turns out that the refresh tag is being used in both 2xx and 3xx
+        # ## responses, so always check both the http location header and the meta
+        # ## tags. Also, the java version passes spaces through to the cdx file,
+        # ## which might break tools that split cdx lines on whitespace.
+        #
+        # #only deal with 2xx and 3xx responses:
+        # #if 3 != len(response_code):
+        # #    return '-'
+        #
+        # charset = self.parse_charset()
+        #
+        # #if response_code.startswith('3'):
+        # location = self.parse_http_header('location')
+        # if location:
+        #     return self.urljoin_and_normalize(record.url, location, charset)
+        # #elif response_code.startswith('2'):
+        # if self.meta_tags and 'refresh' in self.meta_tags:
+        #     redir_loc = self.meta_tags['refresh']
+        #     m = re.search('\d+\s*;\s*url=(.+)', redir_loc, re.I) #url might be capitalized
+        #     if m:
+        #         return self.urljoin_and_normalize(record.url, m.group(1), charset)
+        #
+        # return '-'
 
     # get_response_code() //field "s"
     #___________________________________________________________________________
