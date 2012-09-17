@@ -321,7 +321,10 @@ class CDX_Writer(object):
 
         if 'revisit' == record.type:
             digest = record.get_header('WARC-Payload-Digest')
-            return digest.replace('sha1:', '')
+            if digest is None:
+                return '-'
+            else:
+                return digest.replace('sha1:', '')
         elif 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
             digest = record.get_header('WARC-Payload-Digest')
             #Our patched warc-tools fabricates this header if it is not present in the record
