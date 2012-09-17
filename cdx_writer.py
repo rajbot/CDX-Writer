@@ -278,6 +278,13 @@ class CDX_Writer(object):
                 else:
                     url = url.decode('utf-8', 'replace')
 
+        # Some arc headers contain urls with the '\r' character, which will cause
+        # problems downstream when trying to process this url, so escape it.
+        # While we are at it, replace other newline chars.
+        url = url.replace('\r', '%0D')
+        url = url.replace('\n', '%0A')
+        url = url.replace('\x0c', '%0C') #formfeed
+
         return url
 
     # get_date() //field "b"
