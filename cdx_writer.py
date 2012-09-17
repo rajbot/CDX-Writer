@@ -238,7 +238,10 @@ class CDX_Writer(object):
         if 'warcinfo' == record.type:
             return self.get_original_url(record)
         else:
-            return surt(record.url)
+            try:
+                return surt(record.url)
+            except ValueError:
+                return self.get_original_url(record)
 
 
     # get_compressed_record_size() //field "S"
