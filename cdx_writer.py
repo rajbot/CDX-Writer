@@ -240,7 +240,7 @@ class CDX_Writer(object):
         else:
             try:
                 return surt(record.url)
-            except ValueError:
+            except:
                 return self.get_original_url(record)
 
 
