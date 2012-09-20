@@ -24,6 +24,7 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'arc_v1_with_v2_header.arc.gz':   'com,cdnow)/cgi-bin/mserver/pagename=/rp/cdn/find/discography.html/artistid=henderson*joe/select=music 20001110112000 http://www.cdnow.com:80/cgi-bin/mserver/pagename=/RP/CDN/FIND/discography.html/artistid=HENDERSON*JOE/select=music text/html 200 Z7XLU7KXZVH3AAC6ZZLMMRVWPHC44ALO - - 8884 179 arc_v1_with_v2_header.arc.gz', #from crc24-7-aa-960915931-c/crc24.20001110112006.arc.gz
          'bad_url_with_colon_1.arc.gz':    "http://JavaScript:Wtop('www.pick2hand.com/index2.html') 20071008060921 http://JavaScript:Wtop('www.pick2hand.com/index2.html') text/html 200 J2YQOWCS4LGXA3WV6NJYILFHLGY6GM4V - - 528 0 bad_url_with_colon_1.arc.gz", #from wb_urls.ia331232.20070721072555-c/wb_urls.ia331232.us.archive.org.20071008072146.arc.gz
          'bad_url_with_colon_2.arc.gz':    'http://mhtml:d.hatena.ne.jp/images/top/greenpower_logo.gif 20071121164820 http://mhtml:d.hatena.ne.jp/images/top/greenpower_logo.gif text/html 200 2RFE734TL4XU6RQQOSM2BVPRGS5KGJTS - - 14465 0 bad_url_with_colon_2.arc.gz', #from wb_urls.ia331234.20071009100539-c/wb_urls.ia331234.us.archive.org.20071121182609.arc.gz
+         '18_digit_date.arc.gz':           'com,spaceports,mars)/~jddp/images/links_off.gif 20000918002300 http://mars.spaceports.com:80/~jddp/images/links_off.gif image/gif 200 CKCNEH3454KSTUD7ZKXOIBTE5UEAIJH5 - - 1165 181 18_digit_date.arc.gz', #from IMG_XAB_001010144441-c/IMG_XBB_000918161534.arc.gz
         }
 
 for file, cdx in warcs.iteritems():
