@@ -296,19 +296,23 @@ class CDX_Writer(object):
         #warcs and arcs use a different date format
         #consider using dateutil.parser instead
 
-        date_len = len(record.date)
-        if 14 == date_len:
-            #arc record already has date in the format we need
-            return record.date
-        elif 16 == date_len:
-            #some arc records have 16-digit dates: 2000082305410049
-            return record.date[:14]
-        elif 18 == date_len:
-            #some arc records have 18-digit dates: 200009180023002953
-            return record.date[:14]
-        elif 12 == date_len:
-            #some arc records have 12-digit dates: 200011201434
-            return record.date + '00'
+        if record.date.isdigit():
+            date_len = len(record.date)
+            if 14 == date_len:
+                #arc record already has date in the format we need
+                return record.date
+            elif 16 == date_len:
+                #some arc records have 16-digit dates: 2000082305410049
+                return record.date[:14]
+            elif 18 == date_len:
+                #some arc records have 18-digit dates: 200009180023002953
+                return record.date[:14]
+            elif 12 == date_len:
+                #some arc records have 12-digit dates: 200011201434
+                return record.date + '00'
+        elif re.match('^[a-f0-9]+$', record.date):
+            #some arc records have a hex string in the date field
+            return '-'
 
         #warc record
         date = datetime.strptime(record.date, "%Y-%m-%dT%H:%M:%SZ")
