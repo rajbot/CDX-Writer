@@ -287,6 +287,7 @@ class CDX_Writer(object):
         url = url.replace('\r', '%0D')
         url = url.replace('\n', '%0A')
         url = url.replace('\x0c', '%0C') #formfeed
+        url = url.replace('\x00', '%00') #null may cause problems with downstream C programs
 
         return url
 
