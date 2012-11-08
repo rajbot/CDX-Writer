@@ -602,7 +602,7 @@ class CDX_Writer(object):
                 print s.rstrip().encode('utf-8')
                 #record.dump()
             elif errors:
-                pass # ignore
+                sys.exit("Exiting with the following errors:\n" + str(errors))
             else:
                 pass # tail
 
