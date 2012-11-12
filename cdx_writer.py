@@ -247,12 +247,18 @@ class CDX_Writer(object):
     # get_compressed_record_size() //field "S"
     #___________________________________________________________________________
     def get_compressed_record_size(self, record):
-        return str(record.compressed_record_size)
+        size = record.compressed_record_size
+        if size is None:
+            size = "-"
+
+        return str(size)
+
 
     # get_compressed_arc_file_offset() //field "V"
     #___________________________________________________________________________
     def get_compressed_arc_file_offset(self, record):
         return str(self.offset)
+
 
     # get_original_url() //field "a"
     #___________________________________________________________________________
