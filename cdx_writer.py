@@ -27,7 +27,7 @@ from optparse  import OptionParser
 class CDX_Writer(object):
 
     #___________________________________________________________________________
-    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False):
+    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -45,6 +45,7 @@ class CDX_Writer(object):
         self.file   = file
         self.format = format
         self.all_records  = all_records
+        self.screenshot_mode = screenshot_mode
         self.crlf_pattern = re.compile('\r?\n\r?\n')
 
         #similar to what what the wayback uses:
@@ -238,8 +239,12 @@ class CDX_Writer(object):
         if 'warcinfo' == record.type:
             return self.get_original_url(record)
         else:
+            url = record.url
+            if self.screenshot_mode:
+                url = 'http://web.archive.org/screenshot/'+url
+
             try:
-                return surt(record.url)
+                return surt(url)
             except:
                 return self.get_original_url(record)
 
@@ -294,6 +299,9 @@ class CDX_Writer(object):
         url = url.replace('\n', '%0A')
         url = url.replace('\x0c', '%0C') #formfeed
         url = url.replace('\x00', '%00') #null may cause problems with downstream C programs
+
+        if self.screenshot_mode:
+            url = u'http://web.archive.org/screenshot/' + url
 
         return url
 
@@ -389,6 +397,8 @@ class CDX_Writer(object):
                 mime_type = record.content_type.replace('no-type', 'unk')
         elif 'warcinfo' == record.type:
             mime_type = 'warc-info'
+        elif self.screenshot_mode and 'metadata' == record.type:
+            mime_type = record.content[0]
         else:
             mime_type = 'warc/'+record.type
 
@@ -553,6 +563,9 @@ class CDX_Writer(object):
                 headers = record.content[1]
                 content = None
             headers = headers.splitlines()
+        elif  self.screenshot_mode and 'metadata' == record.type:
+            headers = None
+            content = record.content[1]
         else:
             headers = None
             content = None
@@ -574,7 +587,10 @@ class CDX_Writer(object):
             self.offset = offset
 
             if record:
-                if not self.all_records and (record.type not in allowed_record_types or record.content_type in disallowed_content_types):
+                if self.screenshot_mode:
+                    if record.type != 'metadata':
+                        continue
+                elif not self.all_records and (record.type not in allowed_record_types or record.content_type in disallowed_content_types):
                     continue
 
                 ### arc files from the live web proxy can have a negative content length and a missing payload
@@ -631,6 +647,7 @@ if __name__ == '__main__':
                       " Useful if you are going to relocate the warc.gz file after processing it."
                      )
     parser.add_option("--all-records",   dest="all_records", action="store_true", help="By default we only index http responses. Use this flag to index all WARC records in the file")
+    parser.add_option("--screenshot-mode", dest="screenshot_mode", action="store_true", help="Special Wayback Machine mode for handling WARCs containing screenshots")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -639,8 +656,9 @@ if __name__ == '__main__':
         exit(-1)
 
     cdx_writer = CDX_Writer(input_files[0], options.format,
-                            use_full_path = options.use_full_path,
-                            file_prefix   = options.file_prefix,
-                            all_records   = options.all_records,
+                            use_full_path   = options.use_full_path,
+                            file_prefix     = options.file_prefix,
+                            all_records     = options.all_records,
+                            screenshot_mode = options.screenshot_mode,
                            )
     cdx_writer.make_cdx()
