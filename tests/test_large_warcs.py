@@ -20,10 +20,12 @@ for file, hash in warcs.iteritems():
 
     print "processing", warc_file
 
-    cmd = '../cdx_writer.py %s >tmp.cdx' % warc_file
+    cmd = '/usr/bin/time --format=%e ' + '../cdx_writer.py %s >tmp.cdx' % warc_file
     print "  running", cmd
     status, output = commands.getstatusoutput(cmd)
     assert 0 == status
+    print 'time: ', output
+    print 'size: ', os.path.getsize(warc_file)
 
     cmd = 'md5sum tmp.cdx'
     print "  running", cmd
