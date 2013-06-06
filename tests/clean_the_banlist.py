@@ -41,7 +41,8 @@ import urlparse
 
 comment = None
 
-
+# get_prefix()
+#_______________________________________________________________________________
 def get_prefix(url_list, url):
     for prefix in url_list:
         if url.startswith(prefix):
@@ -50,21 +51,33 @@ def get_prefix(url_list, url):
     return None
 
 
+# fix_ocr()
+#_______________________________________________________________________________
+def fix_ocr(s):
+    #fix OCR errors
+    patterns = {'htlp://':      'http://',
+                'htrp://':      'http://',
+                'hHp://':       'http://',
+                'http:/web':    'http://web',
+                '/vvww.':       '/www.',
+                '/wvvw.':       '/www.',
+                '/wvw.':        '/www.',
+                '/wvwv.':       '/www.',
+                '/wwvv.':       '/www.',
+                'bibatex.org':  'bibalex.org',
+                '.ong/':        '.org/',
+                }
+
+    for old, new in patterns.iteritems():
+        s = s.replace(old, new)
+
+    return s
+
+
+# remove_prefix()
+#_______________________________________________________________________________
 def remove_prefix(s):
     orig_s = s
-
-    #fix OCR errors
-    s = s.replace('htlp://', 'http://')
-    s = s.replace('htrp://', 'http://')
-    s = s.replace('hHp://',  'http://')
-    s = s.replace('http:/web', 'http://web')
-    s = s.replace('/vvww.', '/www.')
-    s = s.replace('/wvvw.', '/www.')
-    s = s.replace('/wvw.',  '/www.')
-    s = s.replace('/wvwv.', '/www.')
-    s = s.replace('/wwvv.', '/www.')
-    s = s.replace('bibatex.org', 'bibalex.org')
-    s = s.replace('.ong/', '.org/')
 
     #prevent urlparse errors
     if not re.match(r'^https?://', s):
@@ -101,6 +114,8 @@ def remove_prefix(s):
     return s
 
 
+# main()
+#_______________________________________________________________________________
 file = sys.argv[1]
 f = open(file)
 
@@ -108,7 +123,7 @@ url_set = set()
 for line in f:
     #print 'processing', line
 
-    url = remove_prefix(line.strip())
+    url = remove_prefix(fix_ocr(line.strip()))
     url = url.decode('utf-8')
     url = url.rstrip(u'\u2028')
     if not re.match(r'^https?://', url):
@@ -118,11 +133,11 @@ for line in f:
 
 
 #remove prefix matches
-urls_by_length = sorted(url_set, key=len) #shortest first
+urls_by_length = sorted(url_set, key=len, reverse=True) #longest first
 urls = []
 while urls_by_length:
-    url = urls_by_length.pop() #get last (longest) element
-    prefix = get_prefix(urls_by_length, url)
+    url = urls_by_length.pop() #get last (shortest) element
+    prefix = get_prefix(urls, url)
     if prefix is None:
         urls.append(url)
 
