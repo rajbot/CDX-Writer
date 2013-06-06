@@ -25,9 +25,9 @@ from optparse  import OptionParser
 
 
 class CDX_Writer(object):
-
+    # init()
     #___________________________________________________________________________
-    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False):
+    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -53,6 +53,7 @@ class CDX_Writer(object):
 
         #these fields are set for each record in the warc
         self.offset        = 0
+        self.surt          = None
         self.mime_type     = None
         self.headers       = None
         self.content       = None
@@ -69,6 +70,18 @@ class CDX_Writer(object):
             self.warc_path = os.path.join(file_prefix, file)
         else:
             self.warc_path = file
+
+        if exclude_list:
+            if not os.path.exists(exclude_list):
+                raise IOError, "Exclude file not found"
+            self.excludes = []
+            f = open(exclude_list, 'r')
+            for line in f:
+                url = line.split()[0]
+                self.excludes.append(surt(url))
+        else:
+            self.excludes = None
+
 
     # parse_http_header()
     #___________________________________________________________________________
@@ -235,7 +248,10 @@ class CDX_Writer(object):
 
     # get_massaged_url() //field "N"
     #___________________________________________________________________________
-    def get_massaged_url(self, record):
+    def get_massaged_url(self, record, use_precalculated_value=True):
+        if use_precalculated_value:
+            return self.surt
+
         if 'warcinfo' == record.type:
             return self.get_original_url(record)
         else:
@@ -572,6 +588,20 @@ class CDX_Writer(object):
 
         return headers, content
 
+
+    # should_exclude()
+    #___________________________________________________________________________
+    def should_exclude(self, surt_url):
+        if not self.excludes:
+            return False
+
+        for prefix in self.excludes:
+            if surt_url.startswith(prefix):
+                return True
+
+        return False
+
+
     # make_cdx()
     #___________________________________________________________________________
     def make_cdx(self):
@@ -597,6 +627,10 @@ class CDX_Writer(object):
                 ### check the content_length from the arc header, not the computed payload size returned by record.content_length
                 content_length_str = record.get_header(record.CONTENT_LENGTH)
                 if content_length_str is not None and int(content_length_str) < 0:
+                    continue
+
+                self.surt = self.get_massaged_url(record, use_precalculated_value=False)
+                if self.should_exclude(self.surt):
                     continue
 
                 ### precalculated data that is used multiple times
@@ -639,6 +673,8 @@ if __name__ == '__main__':
                         use_full_path = False,
                         file_prefix   = None,
                         all_records   = False,
+                        screenshot_mode = False,
+                        exclude_list    = None,
                        )
 
     parser.add_option("--format",  dest="format", help="A space-separated list of fields [default: '%default']")
@@ -648,6 +684,7 @@ if __name__ == '__main__':
                      )
     parser.add_option("--all-records",   dest="all_records", action="store_true", help="By default we only index http responses. Use this flag to index all WARC records in the file")
     parser.add_option("--screenshot-mode", dest="screenshot_mode", action="store_true", help="Special Wayback Machine mode for handling WARCs containing screenshots")
+    parser.add_option("--exclude-list", dest="exclude_list", help="File containing url prefixes to exclude")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -660,5 +697,6 @@ if __name__ == '__main__':
                             file_prefix     = options.file_prefix,
                             all_records     = options.all_records,
                             screenshot_mode = options.screenshot_mode,
+                            exclude_list    = options.exclude_list
                            )
     cdx_writer.make_cdx()
