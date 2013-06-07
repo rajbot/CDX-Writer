@@ -55,20 +55,23 @@ def get_prefix(url_list, url):
 #_______________________________________________________________________________
 def fix_ocr(s):
     #fix OCR errors
-    patterns = {'htlp://':      'http://',
-                'htrp://':      'http://',
-                'hHp://':       'http://',
-                'http:/web':    'http://web',
-                '/vvww.':       '/www.',
-                '/wvvw.':       '/www.',
-                '/wvw.':        '/www.',
-                '/wvwv.':       '/www.',
-                '/wwvv.':       '/www.',
-                'bibatex.org':  'bibalex.org',
-                '.ong/':        '.org/',
-                }
+    #order of the patterns is important
+    patterns = (('htlp://',      'http://'),
+                ('htrp://',      'http://'),
+                ('hHp://',       'http://'),
+                ('http:/w',      'http://w'),
+                ('/vvww.',       '/www.'),
+                ('/wvvw.',       '/www.'),
+                ('/wvw.',        '/www.'),
+                ('/wvwv.',       '/www.'),
+                ('/wwvv.',       '/www.'),
+                ('bibatex.org',  'bibalex.org'),
+                ('.ong/',        '.org/'),
+                ('.ong/',        '.org/'),
+                ('http://http://', 'http://'), #this should come after http:/ cleanup
+               )
 
-    for old, new in patterns.iteritems():
+    for old, new in patterns:
         s = s.replace(old, new)
 
     return s
