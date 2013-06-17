@@ -18,6 +18,7 @@ import sys
 import base64
 import chardet
 import hashlib
+import json
 import urllib
 import urlparse
 from datetime  import datetime
@@ -27,7 +28,7 @@ from optparse  import OptionParser
 class CDX_Writer(object):
     # init()
     #___________________________________________________________________________
-    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None):
+    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None, stats_file=None):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -81,6 +82,13 @@ class CDX_Writer(object):
                 self.excludes.append(surt(url))
         else:
             self.excludes = None
+
+        if stats_file:
+            if os.path.exists(stats_file):
+                raise IOError, "Stats file already exists"
+            self.stats_file = stats_file
+        else:
+            self.stats_file = None
 
 
     # parse_http_header()
@@ -612,11 +620,18 @@ class CDX_Writer(object):
             allowed_record_types     = set(['response', 'revisit'])
             disallowed_content_types = set(['text/dns'])
 
+        stats = {
+            'num_records_processed': 0,
+            'num_records_included':  0,
+            'num_records_filtered':  0,
+        }
+
         fh = ArchiveRecord.open_archive(self.file, gzip="auto", mode="r")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
             self.offset = offset
 
             if record:
+                stats['num_records_processed'] += 1
                 if self.screenshot_mode:
                     if record.type != 'metadata':
                         continue
@@ -631,6 +646,7 @@ class CDX_Writer(object):
 
                 self.surt = self.get_massaged_url(record, use_precalculated_value=False)
                 if self.should_exclude(self.surt):
+                    stats['num_records_filtered'] += 1
                     continue
 
                 ### precalculated data that is used multiple times
@@ -657,12 +673,18 @@ class CDX_Writer(object):
                     s += response + ' '
                 print s.rstrip().encode('utf-8')
                 #record.dump()
+                stats['num_records_included'] += 1
             elif errors:
                 sys.exit("Exiting with the following errors:\n" + str(errors))
             else:
                 pass # tail
 
         fh.close()
+
+        if self.stats_file is not None:
+            f = open(self.stats_file, 'w')
+            json.dump(stats, f, indent=4)
+            f.close()
 
 # main()
 #_______________________________________________________________________________
@@ -685,6 +707,7 @@ if __name__ == '__main__':
     parser.add_option("--all-records",   dest="all_records", action="store_true", help="By default we only index http responses. Use this flag to index all WARC records in the file")
     parser.add_option("--screenshot-mode", dest="screenshot_mode", action="store_true", help="Special Wayback Machine mode for handling WARCs containing screenshots")
     parser.add_option("--exclude-list", dest="exclude_list", help="File containing url prefixes to exclude")
+    parser.add_option("--stats-file", dest="stats_file", help="Output json file containing statistics")
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -697,6 +720,7 @@ if __name__ == '__main__':
                             file_prefix     = options.file_prefix,
                             all_records     = options.all_records,
                             screenshot_mode = options.screenshot_mode,
-                            exclude_list    = options.exclude_list
+                            exclude_list    = options.exclude_list,
+                            stats_file      = options.stats_file,
                            )
     cdx_writer.make_cdx()
