@@ -23,7 +23,7 @@ com,monsterindia,jobs)/details/9660976.html 20110804181044 http://jobs.monsterin
     },
     {
         'file': 'uncompressed.arc',
-        'exclude': 'http://www.sueddeutsche.de\nhttp://art.rolo.vn/a/',
+        'exclude': 'http://www.sueddeutsche.de\n\nhttp://art.rolo.vn/a/', #contains repeated newline
         'result' : """com,monsterindia,jobs)/details/9660976.html 20110804181044 http://jobs.monsterindia.com:80/details/9660976.html text/html 200 BQJDX42R5GFX4OIXPGNHZG3QFM5X3KQR - - 51406 79332 uncompressed.arc""",
         'num_filtered': 2,
     }
