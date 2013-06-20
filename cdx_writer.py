@@ -78,6 +78,8 @@ class CDX_Writer(object):
             self.excludes = []
             f = open(exclude_list, 'r')
             for line in f:
+                if '' == line.strip():
+                    continue
                 url = line.split()[0]
                 self.excludes.append(surt(url))
         else:
