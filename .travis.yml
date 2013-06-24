@@ -6,9 +6,9 @@ install:
   - pip install git+git://github.com/rajbot/surt#egg=surt
   - pip install tldextract==1.0 --use-mirrors
   - pip install chardet --use-mirrors
-script:
+before-script:
   - cd tests
   - wget https://bitbucket.org/rajbot/warc-tools/get/59beb6183623.zip
   - unzip 59beb6183623.zip
   - ln -s rajbot-warc-tools-59beb6183623/hanzo/warctools .
-  - PYTHONPATH=. ./test_small_warcs.py
+script: PYTHONPATH=. ./test_small_warcs.py
