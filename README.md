@@ -1,6 +1,8 @@
 # cdx_writer.py
 Python script to create CDX index files of WARC data.
 
+[![Build Status](https://travis-ci.org/rajbot/CDX-Writer.png?branch=master)](https://travis-ci.org/rajbot/CDX-Writer)
+
 ## Usage
 Usage: `cdx_writer.py [options] warc.gz`
 
@@ -40,6 +42,11 @@ The supported format options are:
 
 More information about the CDX format syntax can be found here:
 http://www.archive.org/web/researcher/cdx_legend.php
+
+
+## Installation
+
+Unfortunately, this script is not propery packaed and cannot be installed via pip. See the [.travis.yml](https://github.com/rajbot/CDX-Writer/blob/master/.travis.yml) file for hints on how to get it running.
 
 
 ## Differences between cdx_writer.py and access-access cdx files
