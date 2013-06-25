@@ -8,14 +8,18 @@ Usage: `cdx_writer.py [options] warc.gz`
 
 Options:
 
-    -h, --help            show this help message and exit
-    --format=FORMAT       A space-separated list of fields [default: 'N b a m s k r M S V g']
-    --use-full-path       Use the full path of the warc file in the 'g' field
-    --file-prefix=PREFIX  Path prefix for warc file name in the 'g' field.
-                          Useful if you are going to relocate the warc.gz file
-                          after processing it.
-    --all-records         By default we only index http responses. Use this flag
-                          to index all WARC records in the file.
+    -h, --help                  show this help message and exit
+    --format=FORMAT             A space-separated list of fields [default: 'N b a m s k r M S V g']
+    --use-full-path             Use the full path of the warc file in the 'g' field
+    --file-prefix=FILE_PREFIX   Path prefix for warc file name in the 'g' field.                        
+                                Useful if you are going to relocate the warc.gz file
+                                after processing it.
+    --all-records               By default we only index http responses. Use this flag
+                                to index all WARC records in the file
+    --screenshot-mode           Special Wayback Machine mode for handling WARCs
+                                containing screenshots
+    --exclude-list=EXCLUDE_LIST File containing url prefixes to exclude                        
+    --stats-file=STATS_FILE     Output json file containing statistics
 
 
 Output is written to stdout. The first line of output is the CDX header.
