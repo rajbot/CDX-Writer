@@ -50,7 +50,7 @@ http://www.archive.org/web/researcher/cdx_legend.php
 
 ## Installation
 
-Unfortunately, this script is not propery packaed and cannot be installed via pip. See the [.travis.yml](https://github.com/rajbot/CDX-Writer/blob/master/.travis.yml) file for hints on how to get it running.
+Unfortunately, this script is not propery packaged and cannot be installed via pip. See the [.travis.yml](https://github.com/rajbot/CDX-Writer/blob/master/.travis.yml) file for hints on how to get it running.
 
 
 ## Differences between cdx_writer.py and access-access cdx files
