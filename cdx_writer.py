@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-""" This script requires a modified version of Hanzo Archives' warc-tools:
+""" Copyright(c)2012-2013 Internet Archive. Software license AGPL version 3.
+
+This script requires a modified version of Hanzo Archives' warc-tools:
 http://code.hanzoarchives.com/warc-tools/src/tip/hanzo/warctools
 
 This script is loosely based on warcindex.py:
@@ -382,17 +384,8 @@ class CDX_Writer(object):
             #Our patched warc-tools fabricates this header if it is not present in the record
             return digest.replace('sha1:', '')
         elif 'response' == record.type and self.content is not None:
-            # This is an arc record, and doesn't have the sha1 in the
-            # WARC-Payload-Digest header. We calculate the sha1 of the content
-            # after stripping off the http headers. If this is a HTTP response,
-            # self.content will contain the response without http headers.
-            #print repr(self.content)
-            #print len(self.content)
-            #print len(record.content[1])
-            #print base64.b32encode(hashlib.sha1(self.content.strip()).digest())
-
-            #Our patched warc-tools fabricates this header even for arc files
-            #so that we can skip large payloads
+            # This is an arc record. Our patched warctools fabricates the WARC-Payload-Digest
+            # header even for arc files so that we don't need to load large payloads in memory
             digest = record.get_header('WARC-Payload-Digest')
             if digest is not None:
                 return digest.replace('sha1:', '')
@@ -527,7 +520,7 @@ class CDX_Writer(object):
     #___________________________________________________________________________
     def get_redirect(self, record):
         """Aaron, Ilya, and Kenji have proposed using '-' in the redirect column
-        unconditionally, after a discussion on Sept 5, 2012. It tirms pit the
+        unconditionally, after a discussion on Sept 5, 2012. It turns out the
         redirect column of the cdx has no effect on the Wayback Machine, and
         there were issues with parsing unescaped characters found in redirects.
         """
