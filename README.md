@@ -11,14 +11,14 @@ Options:
     -h, --help                  show this help message and exit
     --format=FORMAT             A space-separated list of fields [default: 'N b a m s k r M S V g']
     --use-full-path             Use the full path of the warc file in the 'g' field
-    --file-prefix=FILE_PREFIX   Path prefix for warc file name in the 'g' field.                        
+    --file-prefix=FILE_PREFIX   Path prefix for warc file name in the 'g' field.
                                 Useful if you are going to relocate the warc.gz file
                                 after processing it.
     --all-records               By default we only index http responses. Use this flag
                                 to index all WARC records in the file
     --screenshot-mode           Special Wayback Machine mode for handling WARCs
                                 containing screenshots
-    --exclude-list=EXCLUDE_LIST File containing url prefixes to exclude                        
+    --exclude-list=EXCLUDE_LIST File containing url prefixes to exclude
     --stats-file=STATS_FILE     Output json file containing statistics
 
 
@@ -78,7 +78,6 @@ returns 'unk' in this case. Example WARC Record (returns "close" as the mime typ
 
 ### Differences in Meta Tags:
 * cdx_writer.py only looks for meta tags in the head element
-* cdx_writer.py uses lxml.html, which sometimes incorrectly parses meta tags as children of the body element instead of the head
 * archive-access version doesn't parse multiple html meta tags, only the first one
 * archive-access misses FI meta tags sometimes
 * cdx_writer.py always returns tags in A, F, I order. archive-access does not use a consistent order
