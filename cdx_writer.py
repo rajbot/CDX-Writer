@@ -202,17 +202,30 @@ class CDX_Writer(object):
 
             name = None
             content = None
-            m = re.match('''<meta\s+.*(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s+content\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
+
+            m = re.search(r'''\b(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(\1)[\s/>]''', x.group(1), re.I)
             if m:
                 name = m.group(2).lower()
-                content = m.group(5)
             else:
-                m = re.match('''<meta\s+.*content\s*=\s*(['"]?)(.*?)(['"]?)\s+(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
-                if m:
-                    name = m.group(5).lower()
-                    content = m.group(2)
-                else:
-                    continue
+                continue
+
+            m = re.search(r'''\bcontent\s*=\s*(['"]?)(.*?)(\1)[\s/>]''', x.group(1), re.I)
+            if m:
+                content = m.group(2)
+            else:
+                continue
+
+#             m = re.match('''<meta\s+.*(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s+content\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
+#             if m:
+#                 name = m.group(2).lower()
+#                 content = m.group(5)
+#             else:
+#                 m = re.match('''<meta\s+.*content\s*=\s*(['"]?)(.*?)(['"]?)\s+(?:name|http-equiv)\s*=\s*(['"]?)(.*?)(['"]?)\s*/?>$''', x.group(1), re.I)
+#                 if m:
+#                     name = m.group(5).lower()
+#                     content = m.group(2)
+#                 else:
+#                     continue
 
             if name not in meta_tags:
                 meta_tags[name] = content
