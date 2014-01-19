@@ -11,7 +11,7 @@ http://code.hanzoarchives.com/warc-tools/src/1897e2bc9d29/warcindex.py
 The functions that start with "get_" (as opposed to "parse_") are called by the
 dispatch loop in make_cdx using getattr().
 """
-from warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
+from hanzo.warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt          #from https://github.com/rajbot/surt
 
 import os
@@ -27,10 +27,13 @@ from datetime  import datetime
 from optparse  import OptionParser
 
 
+class ParseError(Exception):
+    pass
+
 class CDX_Writer(object):
     # init()
     #___________________________________________________________________________
-    def __init__(self, file, format, use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None, stats_file=None):
+    def __init__(self, file, out_file=sys.stdout, format="N b a m s k r M S V g", use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None, stats_file=None):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -46,6 +49,7 @@ class CDX_Writer(object):
                          }
 
         self.file   = file
+        self.out_file = out_file
         self.format = format
         self.all_records  = all_records
         self.screenshot_mode = screenshot_mode
@@ -609,7 +613,9 @@ class CDX_Writer(object):
     # make_cdx()
     #___________________________________________________________________________
     def make_cdx(self):
-        print ' CDX ' + self.format #print header
+        if isinstance(self.out_file, basestring):
+            self.out_file = open(self.out_file, 'wb')
+        self.out_file.write(' CDX ' + self.format + '\n') #print header
 
         if not self.all_records:
             #filter cdx lines if --all-records isn't specified
@@ -654,7 +660,7 @@ class CDX_Writer(object):
                 s = u''
                 for field in self.format.split():
                     if not field in self.field_map:
-                        sys.exit('Unknown field: ' + field)
+                        raise ParseError('Unknown field: ' + field)
 
                     endpoint = self.field_map[field].replace(' ', '_')
                     response = getattr(self, 'get_' + endpoint)(record)
@@ -667,11 +673,11 @@ class CDX_Writer(object):
                     #print endpoint
                     #print repr(response)
                     s += response + ' '
-                print s.rstrip().encode('utf-8')
+                self.out_file.write(s.rstrip().encode('utf-8')+'\n')
                 #record.dump()
                 stats['num_records_included'] += 1
             elif errors:
-                sys.exit("Exiting with the following errors:\n" + str(errors))
+                raise ParseError(str(errors))
             else:
                 pass # tail
 
@@ -686,7 +692,7 @@ class CDX_Writer(object):
 #_______________________________________________________________________________
 if __name__ == '__main__':
 
-    parser = OptionParser(usage="%prog [options] warc.gz")
+    parser = OptionParser(usage="%prog [options] warc.gz [output_file.cdx]")
     parser.set_defaults(format        = "N b a m s k r M S V g",
                         use_full_path = False,
                         file_prefix   = None,
@@ -707,11 +713,15 @@ if __name__ == '__main__':
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
-    if not 1 == len(input_files):
-        parser.print_help()
-        exit(-1)
+    if len(input_files) != 2:
+        if len(input_files) == 1:
+            input_files.append(sys.stdout)
+        else:
+            parser.print_help()
+            exit(-1)
 
-    cdx_writer = CDX_Writer(input_files[0], options.format,
+    cdx_writer = CDX_Writer(input_files[0], input_files[1],
+                            format=options.format,
                             use_full_path   = options.use_full_path,
                             file_prefix     = options.file_prefix,
                             all_records     = options.all_records,
