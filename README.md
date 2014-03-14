@@ -1,7 +1,7 @@
 # cdx_writer.py
 Python script to create CDX index files of WARC data.
 
-[![Build Status](https://travis-ci.org/rajbot/CDX-Writer.png?branch=master)](https://travis-ci.org/rajbot/CDX-Writer)
+[![Build Status](https://travis-ci.org/internetarchive/CDX-Writer.png?branch=master)](https://travis-ci.org/internetarchive/CDX-Writer)
 
 ## Usage
 Usage: `cdx_writer.py [options] warc.gz`
