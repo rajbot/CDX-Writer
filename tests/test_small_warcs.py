@@ -31,6 +31,7 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'meta_tag_I.arc.gz':              'us,pa,butler,co)/robots.txt 20120312162156 http://co.butler.pa.us/robots.txt text/html 403 3RFKV4YVRVRFMAVXQO35WTW6K4Q3GO4H - I 1096 154 meta_tag_I.arc.gz', #from live-20120312105341306-00165-20120312171822397/live-20120312161414739-00234.arc.gz
          'meta_tag_FI.arc.gz':             'ru,peskomment)/img/yandex.png 20120312161555 http://peskomment.ru/IMG/yandex.png text/html 404 GPQYK2UWAU4ZOITDYRRE2DJ67NX74QN6 - FI 748 154 meta_tag_FI.arc.gz', #from live-20120312105341306-00165-20120312171822397/live-20120312161414739-00234.arc.gz
          'meta_tag_large.warc.gz':         'com,richmondstrikers)/alumni/index_e.html 20131104222633 http://www.richmondstrikers.com/Alumni/index_E.html text/html 200 U7ST7H2CUXSLGCOYR3KT5POAPZI3KY7B - - 21796 0 meta_tag_large.warc.gz', #from NO404-WKP-20131104215558-crawl345/NO404-WKP-20131104222227-08103.warc.gz
+         'wget_ia.warc.gz':                'org,archive)/ 20140314173216 https://archive.org/ text/html 200 ZSSZNM66RWQWZ7FMNEP2XEAORAULQHMY - - 6891 414 wget_ia.warc.gz', #created with wget 1.14
         }
 
 for file, cdx in warcs.iteritems():
