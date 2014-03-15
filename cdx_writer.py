@@ -54,6 +54,7 @@ class CDX_Writer(object):
         self.all_records  = all_records
         self.screenshot_mode = screenshot_mode
         self.crlf_pattern = re.compile('\r?\n\r?\n')
+        self.response_pattern = re.compile('^application/http;\s*msgtype=response$', re.I)
 
         #similar to what what the wayback uses:
         self.fake_build_version = "archive-commons.0.0.1-SNAPSHOT-20120112102659-python"
@@ -371,6 +372,20 @@ class CDX_Writer(object):
     def get_file_name(self, record):
         return self.warc_path
 
+
+    # is_response()
+    #___________________________________________________________________________
+    def is_response(self, content_type):
+        if content_type is None:
+            return False
+
+        got_match = False
+        if self.response_pattern.match(content_type):
+            got_match = True
+
+        return got_match
+
+
     # get_new_style_checksum() //field "k"
     #___________________________________________________________________________
     def get_new_style_checksum(self, record):
@@ -384,7 +399,7 @@ class CDX_Writer(object):
                 return '-'
             else:
                 return digest.replace('sha1:', '')
-        elif 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
+        elif 'response' == record.type and self.is_response(record.content_type):
             digest = record.get_header('WARC-Payload-Digest')
             #Our patched warc-tools fabricates this header if it is not present in the record
             return digest.replace('sha1:', '')
@@ -411,7 +426,7 @@ class CDX_Writer(object):
         if use_precalculated_value:
             return self.mime_type
 
-        if 'response' == record.type and 'application/http; msgtype=response' == record.content_type:
+        if 'response' == record.type and self.is_response(record.content_type):
             mime_type = self.parse_http_content_type_header(record)
         elif 'response' == record.type:
             if record.content_type is None:
