@@ -32,6 +32,7 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'meta_tag_FI.arc.gz':             'ru,peskomment)/img/yandex.png 20120312161555 http://peskomment.ru/IMG/yandex.png text/html 404 GPQYK2UWAU4ZOITDYRRE2DJ67NX74QN6 - FI 748 154 meta_tag_FI.arc.gz', #from live-20120312105341306-00165-20120312171822397/live-20120312161414739-00234.arc.gz
          'meta_tag_large.warc.gz':         'com,richmondstrikers)/alumni/index_e.html 20131104222633 http://www.richmondstrikers.com/Alumni/index_E.html text/html 200 U7ST7H2CUXSLGCOYR3KT5POAPZI3KY7B - - 21796 0 meta_tag_large.warc.gz', #from NO404-WKP-20131104215558-crawl345/NO404-WKP-20131104222227-08103.warc.gz
          'wget_ia.warc.gz':                'org,archive)/ 20140314173216 https://archive.org/ text/html 200 ZSSZNM66RWQWZ7FMNEP2XEAORAULQHMY - - 6891 414 wget_ia.warc.gz', #created with wget 1.14
+         'password-protected.warc.gz':     'com,facebook)/login.php?login_attempt=1 20140331214328 https://www.facebook.com/login.php?login_attempt=1 text/html 200 I45Q4NNB7NJJQ6CULNCSXQBAYSDTYB7U - P 7147 0 password-protected.warc.gz', #from ARCHIVEIT-3007-NONE-10537-20140331214316874-00000-desktop-nlevitt.sf.archive.org-6440.warc.gz
         }
 
 for file, cdx in warcs.iteritems():
