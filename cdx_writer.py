@@ -258,6 +258,20 @@ class CDX_Writer(object):
         if 'noindex' in robot_tags:
             s += 'I'
 
+        # IA-proprietary extension 'P' flag for password protected pages.
+        # crawler adds special header to WARC record, whose value consists
+        # of three values separated by comma. The first value is a number
+        # of attempted logins (so >0 value means captured with login).
+        # Example: ``1,1,http://(com,example,)/``
+        sfps = record.get_header('WARC-Simple-Form-Province-Status')
+        if sfps:
+            sfps = sfps.split(',', 2)
+            try:
+                if int(sfps[0]) > 0:
+                    s += 'P'
+            except ValueError as ex:
+                pass
+
         if s:
             return ''.join(s)
         else:
