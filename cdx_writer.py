@@ -237,12 +237,6 @@ class CDX_Writer(object):
         """
         x_robots_tag = self.parse_http_header('x-robots-tag')
 
-        if x_robots_tag is None:
-            if not self.meta_tags:
-                return '-'
-            if 'robots' not in self.meta_tags:
-                return '-'
-
         robot_tags = []
         if self.meta_tags and 'robots' in self.meta_tags:
             robot_tags += self.meta_tags['robots'].split(',')

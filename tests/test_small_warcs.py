@@ -33,6 +33,7 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'meta_tag_large.warc.gz':         'com,richmondstrikers)/alumni/index_e.html 20131104222633 http://www.richmondstrikers.com/Alumni/index_E.html text/html 200 U7ST7H2CUXSLGCOYR3KT5POAPZI3KY7B - - 21796 0 meta_tag_large.warc.gz', #from NO404-WKP-20131104215558-crawl345/NO404-WKP-20131104222227-08103.warc.gz
          'wget_ia.warc.gz':                'org,archive)/ 20140314173216 https://archive.org/ text/html 200 ZSSZNM66RWQWZ7FMNEP2XEAORAULQHMY - - 6891 414 wget_ia.warc.gz', #created with wget 1.14
          'password-protected.warc.gz':     'com,facebook)/login.php?login_attempt=1 20140331214328 https://www.facebook.com/login.php?login_attempt=1 text/html 200 I45Q4NNB7NJJQ6CULNCSXQBAYSDTYB7U - P 7147 0 password-protected.warc.gz', #from ARCHIVEIT-3007-NONE-10537-20140331214316874-00000-desktop-nlevitt.sf.archive.org-6440.warc.gz
+         'password-protected-no-meta.warc.gz':'au,edu,unimelb,youngscholars)/ 20130813000800 http://youngscholars.unimelb.edu.au/ text/html 200 KPN526ULL7I6IELN2N6QWQUE2RPS335P - P 3494 0 password-protected-no-meta.warc.gz'
         }
 
 for file, cdx in warcs.iteritems():
