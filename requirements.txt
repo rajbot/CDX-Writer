@@ -1,0 +1,5 @@
+#https://bitbucket.org/rajbot/warc-tools/get/tip.zip
+# fork of above with additional fixes
+https://github.com/kngenie/warctools/tarball/rajbot-fixes
+https://github.com/internetarchive/surt/tarball/customization
+chardet
