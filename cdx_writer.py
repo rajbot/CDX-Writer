@@ -299,8 +299,7 @@ class CDX_Writer(object):
             try:
                 return self.urlkey(url)
             except:
-                raise
-                #return self.get_original_url(record)
+                return self.get_original_url(record)
 
 
     # get_compressed_record_size() //field "S"
