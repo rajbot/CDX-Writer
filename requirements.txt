@@ -1,5 +1,5 @@
 #https://bitbucket.org/rajbot/warc-tools/get/tip.zip
 # fork of above with additional fixes
-git+https://github.com/nlevitt/warctools.git@cdx-writer-experimental
+git+https://github.com/nlevitt/warctools.git@cdx-writer-archiveit
 https://github.com/internetarchive/surt/tarball/customization
 chardet
