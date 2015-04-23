@@ -7,9 +7,9 @@ install:
   - pip install chardet --use-mirrors
 before_script:
   - cd tests
-  - wget https://bitbucket.org/rajbot/warc-tools/get/59beb6183623.zip
-  - unzip 59beb6183623.zip
-  - ln -s rajbot-warc-tools-59beb6183623/hanzo/warctools .
+  - wget https://bitbucket.org/rajbot/warc-tools/get/e8266e15f7b6.zip
+  - unzip e8266e15f7b6.zip
+  - ln -s rajbot-warc-tools-e8266e15f7b6/hanzo/warctools .
 script:
   - PYTHONPATH=. ./test_small_warcs.py
   - PYTHONPATH=. ./test_excludes.py
