@@ -34,6 +34,7 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'wget_ia.warc.gz':                'org,archive)/ 20140314173216 https://archive.org/ text/html 200 ZSSZNM66RWQWZ7FMNEP2XEAORAULQHMY - - 6891 414 wget_ia.warc.gz', #created with wget 1.14
          'password-protected.warc.gz':     'com,facebook)/login.php?login_attempt=1 20140331214328 https://www.facebook.com/login.php?login_attempt=1 text/html 200 I45Q4NNB7NJJQ6CULNCSXQBAYSDTYB7U - P 7147 0 password-protected.warc.gz', #from ARCHIVEIT-3007-NONE-10537-20140331214316874-00000-desktop-nlevitt.sf.archive.org-6440.warc.gz
          'password-protected-no-meta.warc.gz':'au,edu,unimelb,youngscholars)/ 20130813000800 http://youngscholars.unimelb.edu.au/ text/html 200 KPN526ULL7I6IELN2N6QWQUE2RPS335P - P 3494 0 password-protected-no-meta.warc.gz',
+         'missing_content_type.warc.gz':'com,example)/missing_content_type 20150415034052 http://example.com/missing_content_type unk - 3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ - - 267 0 missing_content_type.warc.gz',
          'no_sha1_whitespace_in_contenttype.warc.gz': 'com,channel4)/static/globalnav/css/globalnav.css 20140218163736 http://www.channel4.com/static/globalnav/css/globalnav.css text/css 200 5YMS42S5QTOOT5OMMYSXM23ZLZJB6KPR - - 5254 0 no_sha1_whitespace_in_contenttype.warc.gz', #from channel4-www.channel4.com--20140218-1632/channel4-www.channel4.com--20140218-1632-20140218163723-00000-72ebc14a-e463-4284-8b77-2bb1cbf89f0f.warc.gz
         }
 

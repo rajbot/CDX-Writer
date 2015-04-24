@@ -11,8 +11,9 @@ http://code.hanzoarchives.com/warc-tools/src/1897e2bc9d29/warcindex.py
 The functions that start with "get_" (as opposed to "parse_") are called by the
 dispatch loop in make_cdx using getattr().
 """
-from warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
+from hanzo.warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt          #from https://github.com/rajbot/surt
+from surt      import DefaultIAURLCanonicalizer
 
 import os
 import re
@@ -33,7 +34,7 @@ class ParseError(Exception):
 class CDX_Writer(object):
     # init()
     #___________________________________________________________________________
-    def __init__(self, file, out_file=sys.stdout, format="N b a m s k r M S V g", use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None, stats_file=None):
+    def __init__(self, file, out_file=sys.stdout, format="N b a m s k r M S V g", use_full_path=False, file_prefix=None, all_records=False, screenshot_mode=False, exclude_list=None, stats_file=None, canonicalizer_options=None):
 
         self.field_map = {'M': 'AIF meta tags',
                           'N': 'massaged url',
@@ -53,6 +54,9 @@ class CDX_Writer(object):
         self.format = format
         self.all_records  = all_records
         self.screenshot_mode = screenshot_mode
+
+        self.canonicalizer_options = canonicalizer_options or {}
+
         self.crlf_pattern = re.compile('\r?\n\r?\n')
         self.response_pattern = re.compile('^application/http;\s*msgtype=response$', re.I)
 
@@ -88,7 +92,7 @@ class CDX_Writer(object):
                 if '' == line.strip():
                     continue
                 url = line.split()[0]
-                self.excludes.append(surt(url))
+                self.excludes.append(self.urlkey(url))
         else:
             self.excludes = None
 
@@ -99,6 +103,13 @@ class CDX_Writer(object):
         else:
             self.stats_file = None
 
+    def canonicalize(self, hurl):
+        return DefaultIAURLCanonicalizer.canonicalize(
+            hurl, **dict(self.canonicalizer_options))
+
+    def urlkey(self, url):
+        """compute urlkey from `url`."""
+        return surt(url, canonicalizer=self.canonicalize)
 
     # parse_http_header()
     #___________________________________________________________________________
@@ -286,7 +297,7 @@ class CDX_Writer(object):
                 url = 'http://web.archive.org/screenshot/'+url
 
             try:
-                return surt(url)
+                return self.urlkey(url)
             except:
                 return self.get_original_url(record)
 
@@ -722,6 +733,7 @@ if __name__ == '__main__':
                         all_records   = False,
                         screenshot_mode = False,
                         exclude_list    = None,
+                        canonicalizer_options = []
                        )
 
     parser.add_option("--format",  dest="format", help="A space-separated list of fields [default: '%default']")
@@ -733,6 +745,9 @@ if __name__ == '__main__':
     parser.add_option("--screenshot-mode", dest="screenshot_mode", action="store_true", help="Special Wayback Machine mode for handling WARCs containing screenshots")
     parser.add_option("--exclude-list", dest="exclude_list", help="File containing url prefixes to exclude")
     parser.add_option("--stats-file", dest="stats_file", help="Output json file containing statistics")
+    parser.add_option("--no-host-massage", dest="canonicalizer_options",
+                      action='append_const', const=('host_massage', False),
+                      help='Turn off host_massage (ex. stripping "www.")')
 
     (options, input_files) = parser.parse_args(args=sys.argv[1:])
 
@@ -751,5 +766,7 @@ if __name__ == '__main__':
                             screenshot_mode = options.screenshot_mode,
                             exclude_list    = options.exclude_list,
                             stats_file      = options.stats_file,
+                            canonicalizer_options =
+                            options.canonicalizer_options
                            )
     cdx_writer.make_cdx()

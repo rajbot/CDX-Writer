@@ -2,14 +2,9 @@ language: python
 python:
   - "2.7"
 install:
-  - pip install git+git://github.com/rajbot/surt#egg=surt
-  - pip install tldextract==1.0 --use-mirrors
-  - pip install chardet --use-mirrors
+  - pip install -r requirements.txt
 before_script:
   - cd tests
-  - wget https://bitbucket.org/rajbot/warc-tools/get/e8266e15f7b6.zip
-  - unzip e8266e15f7b6.zip
-  - ln -s rajbot-warc-tools-e8266e15f7b6/hanzo/warctools .
 script:
-  - PYTHONPATH=. ./test_small_warcs.py
-  - PYTHONPATH=. ./test_excludes.py
+  - ./test_small_warcs.py
+  - ./test_excludes.py
