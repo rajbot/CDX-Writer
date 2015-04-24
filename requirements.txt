@@ -2,4 +2,4 @@
 # fork of above with additional fixes
 git+https://github.com/nlevitt/warctools.git@cdx-writer-archiveit
 https://github.com/internetarchive/surt/tarball/customization
-chardet
+chardet==1.0.1
