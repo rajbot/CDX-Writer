@@ -53,9 +53,9 @@ http://www.archive.org/web/researcher/cdx_legend.php
 Unfortunately, this script is not propery packaged and cannot be installed via pip. See the [.travis.yml](https://github.com/rajbot/CDX-Writer/blob/master/.travis.yml) file for hints on how to get it running.
 
 
-## Differences between cdx_writer.py and access-access cdx files
+## Differences between cdx_writer.py and archive-access cdx files
 The CDX files produced by the [archive-access](http://sourceforge.net/projects/archive-access/)
-package produce different CDX lines in these cases:
+and that produced by cdx_writer.py differ in these cases:
 
 ### Differences in SURTs:
 * archive-access doesn't encode the %7F character in SURTs
@@ -74,10 +74,10 @@ returns 'unk' in this case. Example WARC Record (returns "close" as the mime typ
 * archive-access sometimes does not turn relative URLs into absolute urls
 * archive-access sometimes does not remove /../ from redirect urls
 * archive-access uses the value from the previous HTTP header for the redirect url if the location header is empty
-* cdx_writer.py only looks for http-equiv=refresh meta tag inside head elements
+* cdx_writer.py only looks for http-equiv=refresh meta tag inside `HEAD` element
 
 ### Differences in Meta Tags:
-* cdx_writer.py only looks for meta tags in the head element
+* cdx_writer.py only looks for meta tags in the `HEAD` element
 * archive-access version doesn't parse multiple html meta tags, only the first one
 * archive-access misses FI meta tags sometimes
 * cdx_writer.py always returns tags in A, F, I order. archive-access does not use a consistent order
