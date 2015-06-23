@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+import py
 import json
 import os
 import subprocess
@@ -38,34 +40,27 @@ com,monsterindia,jobs)/details/9660976.html 20110804181044 http://jobs.monsterin
     }
 ]
 
-test_num = 0
-for test in tests:
+testdir = py.path.local(__file__).dirpath()
+cdx_writer = str(testdir / "../cdx_writer.py")
+
+@pytest.mark.parametrize("test", tests)
+def test_exlcudes(test, tmpdir):
     test_file = test['file']
-    exclude_list = 'tmp_excludes.txt'
-    stats_file   = 'tmp_stats.json'
+    exclude_list = tmpdir / 'tmp_excludes.txt'
+    stats_file   = tmpdir / 'tmp_stats.json'
 
-    assert os.path.exists(test_file)
-    assert not os.path.exists(exclude_list)
-    assert not os.path.exists(stats_file)
+    assert testdir.join(test_file).exists()
 
-    print "processing #", test_num, test_file
+    exclude_list.write(test['exclude'] + '\n')
 
-    f = open(exclude_list, 'w')
-    f.write(test['exclude'] + '\n')
-    f.close()
+    cmd = [cdx_writer, '--all-records', '--exclude-list='+str(exclude_list),
+           '--stats-file='+str(stats_file), str(test_file)]
 
-    cmd = ['../cdx_writer.py', '--all-records', '--exclude-list='+exclude_list, '--stats-file='+stats_file, test_file]
-
-    output = subprocess.check_output(cmd)
+    with testdir.as_cwd():
+        output = subprocess.check_output(cmd)
     #assert output.strip().endswith(test['result']), """\n  expected: %s\n       got: %s\n""" % (test['result'], '\n'.join(output.split('\n')[1:]))
-    assert output == test['result'], """\n  expected: %s\n       got: %s\n""" % (test['result'], output)
+    assert output == test['result']
 
-    stats_fh = open(stats_file)
-    stats = json.load(stats_fh)
-    stats_fh.close()
-    assert stats['num_records_filtered'] == test['num_filtered'], "Wrong number of records were filtered! expected %d got %d" % (test['num_filtered'], stats['num_records_filtered'])
+    stats = json.loads(stats_file.read_text('utf-8'))
 
-    os.unlink(exclude_list)
-    os.unlink(stats_file)
-    test_num += 1
-print "exiting without errors!"
+    assert stats['num_records_filtered'] == test['num_filtered']
