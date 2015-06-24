@@ -41,6 +41,7 @@ com,monsterindia,jobs)/details/9660976.html 20110804181044 http://jobs.monsterin
 ]
 
 testdir = py.path.local(__file__).dirpath()
+datadir = testdir / "small_warcs"
 cdx_writer = str(testdir / "../cdx_writer.py")
 
 @pytest.mark.parametrize("test", tests)
@@ -49,14 +50,14 @@ def test_exlcudes(test, tmpdir):
     exclude_list = tmpdir / 'tmp_excludes.txt'
     stats_file   = tmpdir / 'tmp_stats.json'
 
-    assert testdir.join(test_file).exists()
+    assert datadir.join(test_file).exists()
 
     exclude_list.write(test['exclude'] + '\n')
 
     cmd = [cdx_writer, '--all-records', '--exclude-list='+str(exclude_list),
            '--stats-file='+str(stats_file), str(test_file)]
 
-    with testdir.as_cwd():
+    with datadir.as_cwd():
         output = subprocess.check_output(cmd)
     #assert output.strip().endswith(test['result']), """\n  expected: %s\n       got: %s\n""" % (test['result'], '\n'.join(output.split('\n')[1:]))
     assert output == test['result']
