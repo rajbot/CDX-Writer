@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+import py
 import os
 import commands
 from pipes import quote
@@ -38,19 +40,20 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'no_sha1_whitespace_in_contenttype.warc.gz': 'com,channel4)/static/globalnav/css/globalnav.css 20140218163736 http://www.channel4.com/static/globalnav/css/globalnav.css text/css 200 5YMS42S5QTOOT5OMMYSXM23ZLZJB6KPR - - 5254 0 no_sha1_whitespace_in_contenttype.warc.gz', #from channel4-www.channel4.com--20140218-1632/channel4-www.channel4.com--20140218-1632-20140218163723-00000-72ebc14a-e463-4284-8b77-2bb1cbf89f0f.warc.gz
         }
 
-for file, cdx in warcs.iteritems():
+testdir = py.path.local(__file__).dirpath()
+cdx_writer = str(testdir / "../cdx_writer.py")
 
-    warc_file = quote(file)
-    assert os.path.exists(warc_file)
+@pytest.mark.parametrize(["file", "expected"], warcs.iteritems())
+def test_small_warcs(file, expected):
+    assert testdir.join(file).exists()
 
-    print "processing", warc_file
-
-    cmd = '../cdx_writer.py --all-records %s' % warc_file
-    print "  running", cmd
-    status, output = commands.getstatusoutput(cmd)
+    cmd = '%s --all-records %s' % (cdx_writer, quote(file))
+    with testdir.as_cwd():
+        status, output = commands.getstatusoutput(cmd)
     assert 0 == status
 
-
-    assert output.endswith(cdx), """\n  expected: %s\n       got: %s\n""" % (cdx, '\n'.join(output.split('\n')[1:]))
-
-print "exiting without errors!"
+    # output CDX lines excluding the first CDX header line
+    outputlines = output.rstrip('\n').split('\n')[1:]
+    expectedlines = expected.split('\n')
+    # tail of output matches expected
+    assert expectedlines == outputlines[-len(expectedlines):]
