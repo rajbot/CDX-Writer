@@ -41,14 +41,15 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
         }
 
 testdir = py.path.local(__file__).dirpath()
+datadir = testdir / "small_warcs"
 cdx_writer = str(testdir / "../cdx_writer.py")
 
 @pytest.mark.parametrize(["file", "expected"], warcs.iteritems())
 def test_small_warcs(file, expected):
-    assert testdir.join(file).exists()
+    assert datadir.join(file).exists()
 
     cmd = '%s --all-records %s' % (cdx_writer, quote(file))
-    with testdir.as_cwd():
+    with datadir.as_cwd():
         status, output = commands.getstatusoutput(cmd)
     assert 0 == status
 
