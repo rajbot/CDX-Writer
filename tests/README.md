@@ -6,10 +6,10 @@ Use ``py.test`` to run automated tests.
 ``small_warcs`` directory. py.test will always run these tests.
 
 ``test_large_warcs.py`` will run only when test web archive data
-is setup in ``/warcs`` (currently hard-coded and test will fail if
+is available in ``/warcs`` (currently hard-coded and test will fail if
 you change it, because path is included in the expected output).
 
-## Downloadin Test W/ARCs
+## Downloading Test W/ARCs
 
 To download test web archive for ``test_large_warcs.py``, follow these steps:
 
@@ -37,7 +37,7 @@ Each ``.exp`` file has the expected CDX lines, in which ``urlkey`` and
 original value. So, ``test_arge_warcs.py`` runs the same transformation
 on the ``cdx_writer`` output, then runs ``diff -u`` command on them.
 
-When expected output changes because of bug fix etc., update the whole-file
+When expected output changes due to bug fix etc., update the whole-file
 MD5 hash and corresponding ``.exp`` files. If either ``urlkey`` or
 ``original`` field changes, you'd need to update their MD5 hashes in ``.exp``
 files. In such a situation, it is easier to generate ``.exp`` file from
