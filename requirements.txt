@@ -1,3 +1,3 @@
 git+https://github.com/internetarchive/warctools.git@cdx-writer
-git+https://github.com/internetarchive/surt.git
+git+https://github.com/internetarchive/surt.git@cdx-writer
 chardet==1.0.1
