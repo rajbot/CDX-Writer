@@ -206,16 +206,10 @@ class CDX_Writer(object):
         # so we're going to give up on lxml and use regexes to parse html :(
 
         meta_tags = {}
-        #we only want to look for meta tags that occur before the </head> tag
-        head_limit = None
-        m = re.search('(</head>)', html_str, re.I)
-        if m:
-            head_limit = m.start(1)
-
-        for x in re.finditer("(<meta[^>]+?>)", html_str, re.I):
-            if head_limit is not None and x.start(1) >= head_limit:
+        for x in re.finditer("(<meta[^>]+?>|</head>)", html_str, re.I):
+            #we only want to look for meta tags that occur before the </head> tag
+            if x.group(1).lower() == '</head>':
                 break
-
             name = None
             content = None
 
