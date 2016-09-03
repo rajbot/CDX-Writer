@@ -11,8 +11,8 @@ http://code.hanzoarchives.com/warc-tools/src/1897e2bc9d29/warcindex.py
 The functions that start with "get_" (as opposed to "parse_") are called by the
 dispatch loop in make_cdx using getattr().
 """
-from hanzo.warctools import ArchiveRecord #from https://bitbucket.org/rajbot/warc-tools
-from surt      import surt          #from https://github.com/rajbot/surt
+from hanzo.warctools import ArchiveRecord # from https://bitbucket.org/rajbot/warc-tools
+from surt      import surt                # from https://github.com/internetarchive/surt
 from surt      import DefaultIAURLCanonicalizer
 
 import os
