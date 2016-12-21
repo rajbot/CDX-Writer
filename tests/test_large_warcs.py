@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test cdx_writer.py with real-world W/ARCs.
 """
@@ -51,14 +52,14 @@ def file_md5(fn):
             hasher.update(data)
     return hasher.hexdigest()
 
-@pytest.mark.skipif(not os.path.isdir(warc_dir), reason="requires large_warcs test dataset")
 @pytest.mark.parametrize("data", warcs)
 def test_large_warcs(data, tmpdir):
     warc_fn = data['fn']
-    expected_cdx_md5 = data['cdx_md5']
-
     warc_file = os.path.join(warc_dir, warc_fn)
-    assert os.path.exists(warc_file)
+    if not os.path.isfile(warc_file):
+        pytest.skip("requires {} to run this test".format(warc_file))
+
+    expected_cdx_md5 = data['cdx_md5']
 
     tmpcdx = tmpdir / 'tmp.cdx'
 
