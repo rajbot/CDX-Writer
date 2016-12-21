@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test cdx_writer.py with real-world W/ARCs.
 """
@@ -11,49 +12,62 @@ import subprocess
 from pipes import quote
 from hashlib import md5
 
-warc_dir = '/warcs/'
 data_dir = os.path.join(os.path.dirname(__file__), 'large_warcs')
-
-if not os.path.isdir(warc_dir):
-    pytest.skip(msg="requires large_warcs test dataset")
+warc_dir = data_dir
 
 warcs = [
     dict(fn='YTV-20120204025848-crawl442/YTV-20120204035110-15431.warc.gz',
          file_md5='f06e02b7b777143c0eb67d9de45da8f4',
-         cdx_md5='8be3352ac814c58e333d1a179e7e7951'
+         cdx_md5='7a891b642febb891a6cf78511dc80a55'
          ),
     dict(fn='WIDE-20120121162724-crawl411/WIDE-20120121174231-03025.warc.gz',
          file_md5='f89b9b1b5f36d9c3039e2da2169e01d4',
-         cdx_md5='c8e315322fa22f84f93f0abd0d414281'
+         cdx_md5='53b19ccd106a4f38355c6ebac8b41699'
          ),
     dict(fn='live-20120312105341306-00165-20120312171822397/live-20120312161414739-00234.arc.gz',
          file_md5='f6583963381dcc26c58a76bc433f2713',
-         cdx_md5='13dfd294b80d43696e67f60c8f87eb1e'
+         cdx_md5='a23c3ed3fb459cb53089613419eadce5'
          ),
     # missing filedesc:// header
     dict(fn='wb_urls.ia11013.20050517055850-c/wb_urls.ia11013.20050805040525.arc.gz',
          file_md5='8712de66615e4da87dfb524a5015e19f',
-         cdx_md5='f29414651eaced77184a048a2399477c'
+         cdx_md5='3bfa2eb60555d0b00f2cb1638a0d3556'
          )
     ]
 
 testdir = py.path.local(__file__).dirpath()
 cdx_writer = str(testdir / '../cdx_writer.py')
 
+if sys.platform == 'darwin':
+    TIMECMD = '/usr/bin/time -p '
+else:
+    TIMECMD = '/usr/bin/time --format=%e '
+
+def file_md5(fn):
+    hasher = md5()
+    with open(str(fn), 'rb') as f:
+        while True:
+            data = f.read(8192)
+            if not data: break
+            hasher.update(data)
+    return hasher.hexdigest()
+
 @pytest.mark.parametrize("data", warcs)
 def test_large_warcs(data, tmpdir):
-    file = data['fn']
-    hash = data['cdx_md5']
+    warc_fn = data['fn']
+    warc_file = os.path.join(warc_dir, warc_fn)
+    if not os.path.isfile(warc_file):
+        pytest.skip("requires {} to run this test".format(warc_file))
 
-    warc_file = os.path.join(warc_dir, file)
-    assert os.path.exists(warc_file)
+    expected_cdx_md5 = data['cdx_md5']
 
     tmpcdx = tmpdir / 'tmp.cdx'
 
-    cmd = '/usr/bin/time --format=%e ' + '%s %s >%s' % (
-        cdx_writer, warc_file, tmpcdx)
+    cmd = TIMECMD + '%s %s >%s' % (
+        cdx_writer, warc_fn, tmpcdx)
     print "  running", cmd
-    status, output = commands.getstatusoutput(cmd)
+    with py.path.local(warc_dir).as_cwd():
+        status, output = commands.getstatusoutput(cmd)
     assert 0 == status
     print 'time: ', output
     print 'size: ', os.path.getsize(warc_file)
@@ -63,7 +77,7 @@ def test_large_warcs(data, tmpdir):
     hashcdx(str(tmpcdx), str(tmphashcdx))
 
     # run diff to compare with expected
-    exp = os.path.join(data_dir, re.sub(r'\.w?arc\.gz$', '.exp', file))
+    exp = os.path.join(data_dir, re.sub(r'\.w?arc\.gz$', '.exp', warc_fn))
     if os.path.exists(exp):
         cmd = 'diff -u %r %r' % (exp, str(tmphashcdx))
         print "  running", cmd
@@ -71,13 +85,8 @@ def test_large_warcs(data, tmpdir):
         print output
         assert 0 == status
 
-    cmd = 'md5sum %s' % (tmpcdx,)
-    print "  running", cmd
-    status, output = commands.getstatusoutput(cmd)
-    assert 0 == status
-
-    warc_md5 = output.split()[0]
-    assert hash == warc_md5
+    cdx_md5 = file_md5(tmpcdx)
+    assert expected_cdx_md5 == cdx_md5
 
 def run_cdx_writer(warc_file, output):
     cmd = [cdx_writer, warc_file]
