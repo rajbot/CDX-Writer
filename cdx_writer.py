@@ -609,11 +609,15 @@ class CDX_Writer(object):
         """
 
         if 'response' == record.type and record.content[1].startswith('HTTP'):
+            # some records with empty HTTP payload end with just one CRLF or
+            # LF. If split fails, we assume this situation, and let content be
+            # an empty bytes, rather than None, so that payload digest is
+            # emitted correctly (see get_new_style_checksum method).
             try:
                 headers, content = self.crlf_pattern.split(record.content[1], 1)
             except ValueError:
                 headers = record.content[1]
-                content = None
+                content = ''
             headers = headers.splitlines()
         elif  self.screenshot_mode and 'metadata' == record.type:
             headers = None
