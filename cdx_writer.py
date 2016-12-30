@@ -144,7 +144,10 @@ class RecordHandler(object):
         # warcs and arcs use a different date format
         # consider using dateutil.parser instead
         record = self.record
-        if record.date.isdigit():
+        if record.date is None:
+            # TODO: in strict mode, this shall be a fatal error.
+            return None
+        elif record.date.isdigit():
             date_len = len(record.date)
             if 14 == date_len:
                 #arc record already has date in the format we need
@@ -572,7 +575,7 @@ class ScreenshotHandler(RecordHandler):
 
     @property
     def mime_type(self):
-        return record.content[0]
+        return self.record.content[0]
 
 class RecordDispatcher(object):
     def __init__(self, all_records=False, screenshot_mode=False):
@@ -586,9 +589,10 @@ class RecordDispatcher(object):
             self.dispatchers.append(self.dispatch_other)
 
     def dispatch_screenshot(self, record):
-        if (record.type == 'metadata' and
-            record.content_type.startswith('image/')):
-            return ScreenshotHandler
+        if record.type == 'metadata':
+            content_type = record.content_type
+            if content_type and content_type.startswith('image/'):
+                return ScreenshotHandler
         return None
 
     def dispatch_http(self, record):
@@ -723,15 +727,28 @@ class CDX_Writer(object):
     # make_cdx()
     #___________________________________________________________________________
     def make_cdx(self):
+        close_out_file = False
         if isinstance(self.out_file, basestring):
             self.out_file = open(self.out_file, 'wb')
-        self.out_file.write(b' CDX ' + self.format + b'\n') #print header
+            close_out_file = True
 
         stats = {
             'num_records_processed': 0,
-            'num_records_included':  0,
-            'num_records_filtered':  0,
-        }
+            'num_records_included': 0,
+            'num_records_filtered': 0,
+            }
+        try:
+            self._make_cdx(stats)
+        finally:
+            if close_out_file:
+                self.out_file.close()
+
+            if self.stats_file is not None:
+                with open(self.stats_file, 'w') as f:
+                    json.dump(stats, f, indent=4)
+
+    def _make_cdx(self, stats):
+        self.out_file.write(b' CDX ' + self.format + b'\n') #print header
 
         fh = ArchiveRecord.open_archive(self.file, gzip="auto", mode="r")
         for (offset, record, errors) in fh.read_records(limit=None, offsets=True):
@@ -766,11 +783,6 @@ class CDX_Writer(object):
             stats['num_records_included'] += 1
 
         fh.close()
-
-        if self.stats_file is not None:
-            with open(self.stats_file, 'w') as f:
-                json.dump(stats, f, indent=4)
-
 
 # main()
 #_______________________________________________________________________________
