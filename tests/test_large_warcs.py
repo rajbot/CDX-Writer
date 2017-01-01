@@ -88,9 +88,15 @@ def test_large_warcs(data, tmpdir):
     cdx_md5 = file_md5(tmpcdx)
     assert expected_cdx_md5 == cdx_md5
 
-def run_cdx_writer(warc_file, output):
+def run_cdx_writer(warc_file, output, basedir=None):
+    if basedir:
+        basedir = py.path.local(basedir)
+        warc_file = basedir.bestrelpath(py.path.local(warc_file))
+    else:
+        basedir = py.path.local('.')
     cmd = [cdx_writer, warc_file]
-    p = subprocess.Popen(cmd, stdout=output)
+    with basedir.as_cwd():
+        p = subprocess.Popen(cmd, stdout=output)
     return p
 
 def hashcdx(cdx, hashcdx):
@@ -119,7 +125,7 @@ if __name__ == "__main__":
             print >>sys.stderr, "- Reading {}".format(warc_file)
             print >>sys.stderr, "  Writing {}".format(out_file)
             with open(out_file, 'wb') as outf:
-                p = run_cdx_writer(warc_file, outf)
+                p = run_cdx_writer(warc_file, outf, args.warcdir)
                 rc = p.wait()
                 assert rc == 0
 
