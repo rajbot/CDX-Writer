@@ -59,7 +59,7 @@ def test_large_warcs(data, tmpdir):
     if not os.path.isfile(warc_file):
         pytest.skip("requires {} to run this test".format(warc_file))
 
-    expected_cdx_md5 = data['cdx_md5']
+    expected_cdx_md5 = data.get('cdx_md5')
 
     tmpcdx = tmpdir / 'tmp.cdx'
 
@@ -85,8 +85,9 @@ def test_large_warcs(data, tmpdir):
         print output
         assert 0 == status
 
-    cdx_md5 = file_md5(tmpcdx)
-    assert expected_cdx_md5 == cdx_md5
+    if expected_cdx_md5:
+        cdx_md5 = file_md5(tmpcdx)
+        assert expected_cdx_md5 == cdx_md5
 
 def run_cdx_writer(warc_file, output, basedir=None):
     if basedir:
