@@ -31,7 +31,7 @@ warcs = [
     # missing filedesc:// header
     dict(fn='wb_urls.ia11013.20050517055850-c/wb_urls.ia11013.20050805040525.arc.gz',
          file_md5='8712de66615e4da87dfb524a5015e19f',
-         cdx_md5='3bfa2eb60555d0b00f2cb1638a0d3556'
+         cdx_md5='2a88c10ed48d35a09126895324c60141'
          )
     ]
 
