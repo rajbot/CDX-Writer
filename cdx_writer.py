@@ -571,7 +571,7 @@ class RevisitHandler(HttpHandler):
 class ScreenshotHandler(RecordHandler):
     @property
     def original_url(self):
-        return u'http://web.archive.org/screenshot/' + self.safe_url()
+        return 'http://web.archive.org/screenshot/' + self.safe_url()
 
     @property
     def mime_type(self):
