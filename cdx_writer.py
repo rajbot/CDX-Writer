@@ -577,6 +577,31 @@ class ScreenshotHandler(RecordHandler):
     def mime_type(self):
         return self.record.content[0]
 
+class FtpHandler(RecordHandler):
+    @property
+    def mime_type(self):
+        return self.record.content[0]
+
+    @property
+    def response_code(self):
+        """Always return 226 assuming all ftp captures are successful ones.
+        Code 226 represents successful completion of file action, and it is
+        what org.apache.commons.net.ftp.FTPClient#getReplyCode() (used by
+        Heritrix) returns upon successful download.
+
+        Ref. https://en.wikipedia.org/wiki/List_of_FTP_server_return_codes
+        """
+        return '226'
+
+    @property
+    def new_style_checksum(self):
+        digest = self.get_record_header('WARC-Block-Digest')
+        if digest:
+            return digest.replace('sha1:', '')
+
+        h = hashlib.sha1(self.record.content[1])
+        return base64.b32encode(h.digest())
+
 class RecordDispatcher(object):
     def __init__(self, all_records=False, screenshot_mode=False):
         self.dispatchers = []
@@ -584,6 +609,7 @@ class RecordDispatcher(object):
             self.dispatchers.append(self.dispatch_screenshot)
         else:
             self.dispatchers.append(self.dispatch_http)
+            self.dispatchers.append(self.dispatch_ftp)
 
         if all_records:
             self.dispatchers.append(self.dispatch_other)
@@ -604,6 +630,13 @@ class RecordDispatcher(object):
             return RevisitHandler
         return None
 
+    def dispatch_ftp(self, record):
+        if record.type == 'resource':
+            # wget saves resource records with wget agument and logging
+            # output at the end of the WARC. those need to be skipped.
+            if record.url.startswith('ftp://'):
+                return FtpHandler
+        return None
 
     def dispatch_other(self, record):
         if record.type == 'warcinfo':
