@@ -742,13 +742,9 @@ class CDX_Writer(object):
             attrs.append(self.field_map[field].replace(' ', '_').lower())
         return attrgetter(*attrs)
 
-    def canonicalize(self, hurl):
-        return DefaultIAURLCanonicalizer.canonicalize(
-            hurl, **dict(self.canonicalizer_options))
-
     def urlkey(self, url):
         """compute urlkey from `url`."""
-        return surt(url, canonicalizer=self.canonicalize)
+        return surt(url, **dict(self.canonicalizer_options))
 
     # should_exclude()
     #___________________________________________________________________________

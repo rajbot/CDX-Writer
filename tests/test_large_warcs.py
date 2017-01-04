@@ -21,17 +21,14 @@ warcs = [
          cdx_md5='7a891b642febb891a6cf78511dc80a55'
          ),
     dict(fn='WIDE-20120121162724-crawl411/WIDE-20120121174231-03025.warc.gz',
-         file_md5='f89b9b1b5f36d9c3039e2da2169e01d4',
-         cdx_md5='53b19ccd106a4f38355c6ebac8b41699'
+         file_md5='f89b9b1b5f36d9c3039e2da2169e01d4'
          ),
     dict(fn='live-20120312105341306-00165-20120312171822397/live-20120312161414739-00234.arc.gz',
-         file_md5='f6583963381dcc26c58a76bc433f2713',
-         cdx_md5='a23c3ed3fb459cb53089613419eadce5'
+         file_md5='f6583963381dcc26c58a76bc433f2713'
          ),
     # missing filedesc:// header
     dict(fn='wb_urls.ia11013.20050517055850-c/wb_urls.ia11013.20050805040525.arc.gz',
-         file_md5='8712de66615e4da87dfb524a5015e19f',
-         cdx_md5='2a88c10ed48d35a09126895324c60141'
+         file_md5='8712de66615e4da87dfb524a5015e19f'
          ),
     dict(fn='ftp-mayn-de-2016-08-04/ftp.mayn.de.warc.gz',
         file_md5='19699891d68508d2a1105a5a2f8f35e6'
