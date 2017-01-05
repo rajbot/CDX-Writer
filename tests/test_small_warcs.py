@@ -4,8 +4,7 @@
 import pytest
 import py
 import os
-import commands
-from pipes import quote
+import sys
 
 warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181142 http://www.killerjo.net:80/robots.txt unk - YZI2NMZ5ILYICUL3PNYVYQR3KI2YY5EH - - 139 161 alexa_short_header.arc.gz',
          'bad_mime_type.arc.gz':           'net,naver,cafethumb)/20101223_84/qkrgns3_129303386816936xuq_jpg/imag0030_qkrgns3.jpg 20120407152447 http://cafethumb.naver.net/20101223_84/qkrgns3_129303386816936xUq_jpg/imag0030_qkrgns3.jpg unk 200 OUK52MTLKPEA6STHTFFPFI2JP7G4QBUZ - - 3587 153 bad_mime_type.arc.gz',
@@ -45,15 +44,24 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
 
 testdir = py.path.local(__file__).dirpath()
 datadir = testdir / "small_warcs"
-cdx_writer = str(testdir / "../cdx_writer.py")
+sys.path[0:0] = (str(testdir / '..'),)
+cdx_writer = __import__('cdx_writer')
 
 @pytest.mark.parametrize(["file", "expected"], warcs.iteritems())
-def test_small_warcs(file, expected):
+def test_small_warcs(file, expected, tmpdir):
     assert datadir.join(file).exists()
 
-    cmd = '%s --all-records %s' % (cdx_writer, quote(file))
+    args = ['--all-records', file]
     with datadir.as_cwd():
-        status, output = commands.getstatusoutput(cmd)
+        outpath = tmpdir / 'stdout'
+        saved_stdout = sys.stdout
+        sys.stdout = outpath.open(mode='wb')
+        try:
+            status = cdx_writer.main(args)
+        finally:
+            sys.stdout.close()
+            output = outpath.read_binary()
+            sys.stdout = saved_stdout
     assert 0 == status
 
     # output CDX lines excluding the first CDX header line
