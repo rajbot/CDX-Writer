@@ -40,6 +40,33 @@ warcs = {'alexa_short_header.arc.gz':      'net,killerjo)/robots.txt 20110804181
          'no_sha1_whitespace_in_contenttype.warc.gz': 'com,channel4)/static/globalnav/css/globalnav.css 20140218163736 http://www.channel4.com/static/globalnav/css/globalnav.css text/css 200 5YMS42S5QTOOT5OMMYSXM23ZLZJB6KPR - - 5254 0 no_sha1_whitespace_in_contenttype.warc.gz', #from channel4-www.channel4.com--20140218-1632/channel4-www.channel4.com--20140218-1632-20140218163723-00000-72ebc14a-e463-4284-8b77-2bb1cbf89f0f.warc.gz
          # Pathological: Empty HTTP payload, header ends with single "\n"
          'empty_payload_header_ending_with_lf.arc.gz': '1,120,179,210)/test 20030801004548 http://210.179.120.1/test unk 200 3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ - - 222 0 empty_payload_header_ending_with_lf.arc.gz',
+         # ftp capture in resource record, with WARC-Payload-Digest (Heritrix)
+         'ftp-resource-payload-digest.warc.gz': (
+            'org,gnome,ftp)/header.html 20161231090454 '
+            'ftp://ftp.gnome.org/HEADER.html '
+            'application/octet-stream 226 '
+            'DN7ET4FWNU6IBZAUAJM4STV74ORN4E4N '
+            '- - '
+            '753 0 ftp-resource-payload-digest.warc.gz'
+            ),
+         # ftp capture in resource record, with WARC-Block-Digest (wget)
+         'ftp-resource-block-digest.warc.gz': (
+            'de,mayn,ftp)/pub/really_old_stuff/index.txt 20160803105717 '
+            'ftp://ftp.mayn.de/pub/really_old_stuff/INDEX.txt '
+            'application/octet-stream 226 '
+            'A2QW3LECPALZHVBQJ75WFDLXTQEF3FGZ '
+            '- - '
+            '491 0 ftp-resource-block-digest.warc.gz'
+            ),
+        # ftp capture in resource record, with neither payload nor block digest
+        'ftp-resource-no-digest.warc.gz': (
+            'de,mayn,ftp)/pub/really_old_stuff/index.txt 20160803105717 '
+            'ftp://ftp.mayn.de/pub/really_old_stuff/INDEX.txt '
+            'application/octet-stream 226 '
+            'A2QW3LECPALZHVBQJ75WFDLXTQEF3FGZ '
+            '- - '
+            '442 0 ftp-resource-no-digest.warc.gz'
+            )
         }
 
 testdir = py.path.local(__file__).dirpath()

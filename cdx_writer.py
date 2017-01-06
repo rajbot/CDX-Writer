@@ -595,6 +595,12 @@ class FtpHandler(RecordHandler):
 
     @property
     def new_style_checksum(self):
+        # For "resource" record, block is also a payload. So
+        # Both WARC-Payload-Digest and WARC-Block-Digest is valid.
+        # wget uses Block. Heritirx uses Payload.
+        digest = self.get_record_header('WARC-Payload-Digest')
+        if digest:
+            return digest.replace('sha1:', '')
         digest = self.get_record_header('WARC-Block-Digest')
         if digest:
             return digest.replace('sha1:', '')
