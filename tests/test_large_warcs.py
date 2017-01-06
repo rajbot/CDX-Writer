@@ -32,7 +32,10 @@ warcs = [
     dict(fn='wb_urls.ia11013.20050517055850-c/wb_urls.ia11013.20050805040525.arc.gz',
          file_md5='8712de66615e4da87dfb524a5015e19f',
          cdx_md5='2a88c10ed48d35a09126895324c60141'
-         )
+         ),
+    dict(fn='ftp-mayn-de-2016-08-04/ftp.mayn.de.warc.gz',
+        file_md5='19699891d68508d2a1105a5a2f8f35e6'
+        )
     ]
 
 testdir = py.path.local(__file__).dirpath()
