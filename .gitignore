@@ -1,5 +1,10 @@
+/build/
+/dist/
+/.coverage
+/*.egg-info/
 tests/__pycache__
 tests/large_warcs/*/*.cdx
 tests/large_warcs/*/*.warc.gz
 tests/large_warcs/*/*.arc.gz
-tests/*.pyc
+*.pyc
+.cache/
