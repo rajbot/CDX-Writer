@@ -631,8 +631,16 @@ class RecordDispatcher(object):
         if record.content_type in ('text/dns',):
             return None
         if record.type == 'response':
+            # exclude 304 Not Modified responses (unless --all-records)
+            m = ResponseHandler.RE_RESPONSE_LINE.match(record.content[1])
+            if m and m.group(1) == '304':
+                return None
             return ResponseHandler
         elif record.type == 'revisit':
+            # exclude 304 Not Modified revisits (unless --all-records)
+            if record.get_header('WARC-Profile') and record.get_header(
+                    'WARC-Profile').endswith('/revisit/server-not-modified'):
+                return None
             return RevisitHandler
         return None
 
@@ -647,7 +655,12 @@ class RecordDispatcher(object):
     def dispatch_other(self, record):
         if record.type == 'warcinfo':
             return WarcinfoHandler
-        return RecordHandler
+        elif record.type == 'response':
+            return ResponseHandler
+        elif record.type == 'revisit':
+            return RevisitHandler
+        else:
+            return RecordHandler
 
     def get_handler(self, record, **kwargs):
         for disp in self.dispatchers:
