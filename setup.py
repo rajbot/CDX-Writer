@@ -5,6 +5,6 @@ from setuptools import setup
 
 setup(
     name='CDX-Writer',
-    version='0.3.1.dev173',
+    version='0.3.1',
     py_modules=['cdx_writer'],
     )
