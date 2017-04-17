@@ -13,7 +13,6 @@ dispatch loop in make_cdx using getattr().
 """
 from hanzo.warctools import ArchiveRecord # from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt                # from https://github.com/internetarchive/surt
-from surt      import DefaultIAURLCanonicalizer
 
 import os
 import re
@@ -22,11 +21,10 @@ import base64
 import chardet
 import hashlib
 import json
-import urllib
 import urlparse
-from datetime  import datetime
+from datetime import datetime
 from operator import attrgetter
-from optparse  import OptionParser
+from optparse import OptionParser
 
 def to_unicode(s, charset):
     if isinstance(s, str):
