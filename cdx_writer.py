@@ -281,7 +281,7 @@ class WarcinfoHandler(RecordHandler):
 
 class HttpHandler(RecordHandler):
     """Logic common to all HTTP response records
-    (``response``, ``revisit`` and ``resource`` record types).
+    (``response`` and ``revisit`` record types).
     """
     meta_tags = None
 
@@ -553,13 +553,12 @@ class ResponseHandler(HttpHandler):
 
         return ''.join(s) if s else None
 
-class ResourceHandler(ResponseHandler):
+class ResourceHandler(RecordHandler):
     """HTTP resource record (``resource`` record type).
     """
-    def __init__(self, record, offset, cdx_writer):
-        super(ResponseHandler, self,).__init__(record, offset, cdx_writer)
-        self.lxml_parse_limit = cdx_writer.lxml_parse_limit
-        self.headers, self.content = self.parse_headers_and_content()
+    @property
+    def mime_type(self):
+        return self.record.content[0]
 
 class RevisitHandler(HttpHandler):
     """HTTP revisit record (``revisit`` record type).
@@ -649,9 +648,6 @@ class RecordDispatcher(object):
                 return None
             return RevisitHandler
         elif record.type == 'resource' and record.url.startswith(('http://', 'https://')):
-            m = ResourceHandler.RE_RESPONSE_LINE.match(record.content[1])
-            if m and m.group(1) == '304':
-                return None
             return ResourceHandler
         return None
 
