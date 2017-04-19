@@ -620,7 +620,7 @@ class RecordDispatcher(object):
             self.dispatchers.append(self.dispatch_screenshot)
         else:
             self.dispatchers.append(self.dispatch_http)
-            self.dispatchers.append(self.dispatch_ftp)
+            self.dispatchers.append(self.dispatch_resource)
 
         if all_records:
             self.dispatchers.append(self.dispatch_other)
@@ -647,16 +647,16 @@ class RecordDispatcher(object):
                     'WARC-Profile').endswith('/revisit/server-not-modified'):
                 return None
             return RevisitHandler
-        elif record.type == 'resource' and record.url.startswith(('http://', 'https://')):
-            return ResourceHandler
         return None
 
-    def dispatch_ftp(self, record):
+    def dispatch_resource(self, record):
         if record.type == 'resource':
             # wget saves resource records with wget agument and logging
             # output at the end of the WARC. those need to be skipped.
             if record.url.startswith('ftp://'):
                 return FtpHandler
+            elif record.url.startswith(('http://', 'https://')):
+                return ResourceHandler
         return None
 
     def dispatch_other(self, record):
