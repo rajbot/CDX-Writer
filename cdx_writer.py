@@ -13,7 +13,6 @@ dispatch loop in make_cdx using getattr().
 """
 from hanzo.warctools import ArchiveRecord # from https://bitbucket.org/rajbot/warc-tools
 from surt      import surt                # from https://github.com/internetarchive/surt
-from surt      import DefaultIAURLCanonicalizer
 
 import os
 import re
@@ -22,11 +21,10 @@ import base64
 import chardet
 import hashlib
 import json
-import urllib
 import urlparse
-from datetime  import datetime
+from datetime import datetime
 from operator import attrgetter
-from optparse  import OptionParser
+from optparse import OptionParser
 
 def to_unicode(s, charset):
     if isinstance(s, str):
@@ -555,6 +553,13 @@ class ResponseHandler(HttpHandler):
 
         return ''.join(s) if s else None
 
+class ResourceHandler(RecordHandler):
+    """HTTP resource record (``resource`` record type).
+    """
+    @property
+    def mime_type(self):
+        return self.record.content[0]
+
 class RevisitHandler(HttpHandler):
     """HTTP revisit record (``revisit`` record type).
 
@@ -615,7 +620,7 @@ class RecordDispatcher(object):
             self.dispatchers.append(self.dispatch_screenshot)
         else:
             self.dispatchers.append(self.dispatch_http)
-            self.dispatchers.append(self.dispatch_ftp)
+            self.dispatchers.append(self.dispatch_resource)
 
         if all_records:
             self.dispatchers.append(self.dispatch_other)
@@ -644,12 +649,14 @@ class RecordDispatcher(object):
             return RevisitHandler
         return None
 
-    def dispatch_ftp(self, record):
+    def dispatch_resource(self, record):
         if record.type == 'resource':
             # wget saves resource records with wget agument and logging
             # output at the end of the WARC. those need to be skipped.
             if record.url.startswith('ftp://'):
                 return FtpHandler
+            elif record.url.startswith(('http://', 'https://')):
+                return ResourceHandler
         return None
 
     def dispatch_other(self, record):
