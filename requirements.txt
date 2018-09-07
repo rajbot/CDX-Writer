@@ -1,0 +1,3 @@
+https://github.com/internetarchive/warctools/archive/cdx-writer.zip
+surt==0.3.0
+chardet==1.0.1
