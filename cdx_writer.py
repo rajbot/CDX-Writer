@@ -164,6 +164,9 @@ class RecordHandler(object):
         elif re.match('[a-f0-9]+$', record.date):
             #some arc records have a hex string in the date field
             return None
+        elif re.match('[0-9]{14,18}[a-zA-Z]+$', record.date):
+            #some arc records are like this: 20160211000000jpg
+            return record.date[:14]
 
         #warc record
         date = datetime.strptime(record.date, "%Y-%m-%dT%H:%M:%SZ")
